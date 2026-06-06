@@ -198,16 +198,90 @@ GT 1 (VAM-VAE commissioning), GT 7 (demand sustainability), GT 8 (high single-di
 ### Changes Planned for prompt_v4
 - Investigate why opening remarks statements (GT 2, 3, 4, 5, 6) are consistently missed across all 3 runs
 - Strengthen self-sufficiency instruction — current version not being followed reliably
+- Full prompt rethink — patch-based approach not working, rebuild from scratch
+
+---
+
+## Run 4
+**Date:** 06 June 2026
+**Model:** gpt-4o-mini
+**Prompt:** prompt_v4
+**Transcript:** Asian Paints Q4 FY26
+
+### Prompt Changes from v3
+Complete rewrite — moved away from patch-based approach. Key structural changes:
+- Output unit changed from "statement" to "passage" — signals multi-sentence extraction
+- Definition expanded to cover company, industry, and macro future predictions
+- Self-sufficiency elevated to rule 2 of output format, not a footnote
+- Context inclusion given its own explicit rule with specific reference word examples
+- Q&A handling made explicit with its own rule
+- Removed all enumerated phrasing patterns — replaced with intent-based definition
+
+### Raw Numbers
+- Total passages extracted: 8
+- Duplicates: 0
+- Not forward-looking: 0
+
+### Precision
+- All 8 passages are genuinely forward-looking
+- **Strict Precision: 8/8 = 100%** — first clean precision across all runs
+
+### Recall
+- GT statements found: 10 out of 20
+- **Recall: 10/20 = 50%**
+
+### GT Statements Found
+GT 2 (industrial coatings growth) NEW, GT 3 (international business growth) NEW, GT 5 (further price increases) NEW, GT 6 (not passing full inflation impact) NEW, GT 7 (demand sustainability), GT 8 (high single-digit volume growth), GT 10 (volume growth 8-10%), GT 13 (retain margin guidance), GT 16 (margin guidance partial), GT 20 (volume-value gap partial)
+
+### GT Found For First Time Ever
+- GT 2 — Industrial coatings growth (was missed in all 3 previous runs)
+- GT 3 — International business growth (was missed in all 3 previous runs)
+- GT 5 — Further price increases (was missed in all 3 previous runs)
+- GT 6 — Not passing full inflation impact (was missed in all 3 previous runs)
+
+### GT Statements Missed
+- GT 1 — VAM-VAE commissioning timeline (Passage 5 covers benefits but not the H1 commissioning date)
+- GT 4 — 10.5-11% price increase from opening remarks
+- GT 9 — Competitive intensity to continue
+- GT 11 — Calibrated price increases
+- GT 12 — Backward integration timing
+- GT 14 — A&P rationalization + discounting
+- GT 15 — Larger impact in Q1 and Q2
+- GT 17 — Price increases sticky
+- GT 18 — Open to more price increases H1
+- GT 19 — VAM-VAE full benefits 1.5-2 years
+
+### Regression vs Run 3
+GT 9, 11, 12, 17 were found in Run 3 but lost in Run 4. The model consolidated into fewer, higher-quality passages and skipped standalone Q&A guidance statements in the process.
+
+### Self-Sufficiency Audit (Run 4)
+- ✅ Fully self-sufficient: 5 out of 8 (major improvement from Run 3: 1/21)
+- ⚠️ Partially sufficient: 2 out of 8 (Passage 7 missing 18-20% number; Passage 8 missing what trajectory refers to)
+- ❌ Missing context: 1 out of 8 (Passage 5 about VAM-VAE benefits missing commissioning timeline)
+
+### Root Cause Analysis
+- Precision improvement is real — passage format works, model includes multi-sentence context naturally
+- Recall held at 50% — same number as Run 1 but completely different GT statements found
+- Core tension identified: quality and coverage pull in opposite directions. Run 3 had broad coverage (21 statements) but poor quality. Run 4 has high quality (8 passages) but misses standalone Q&A guidance
+- Model is now consolidating related guidance into single passages — good for self-sufficiency, bad for recall of individual GT statements
+- Passage 7 and 8 still partially incomplete — Q&A context instruction not fully followed
+
+### Changes Planned for prompt_v5
+- Keep passage format (working well for quality)
+- Add explicit instruction to not consolidate — each distinct forward-looking topic should be its own passage
+- Strengthen Q&A context rule — Passage 7 missing 18-20% because analyst context not included
+- Add instruction to cover every Q&A exchange individually, not just the opening remarks
 
 ---
 
 ## Summary Table
 
-| Run | Prompt | Model | Precision | Recall | Duplicates | Not FLS |
-|---|---|---|---|---|---|---|
-| 1 | prompt_v1 | gpt-4o-mini | 65% | 50% | 1 | 1 |
-| 2 | prompt_v2 | gpt-4o-mini | 67% | 45% | 0 | 0 |
-| 3 | prompt_v3 | gpt-4o-mini | 62% | 55% | 0 | 2 |
+| Run | Prompt | Model | Precision | Recall | Passages | Self-Sufficient | Not FLS |
+|---|---|---|---|---|---|---|---|
+| 1 | prompt_v1 | gpt-4o-mini | 65% | 50% | 18 | 1/17 | 1 |
+| 2 | prompt_v2 | gpt-4o-mini | 67% | 45% | 15 | 1/15 | 0 |
+| 3 | prompt_v3 | gpt-4o-mini | 62% | 55% | 21 | 1/21 | 2 |
+| 4 | prompt_v4 | gpt-4o-mini | 100% | 50% | 8 | 5/8 | 0 |
 
 ---
 

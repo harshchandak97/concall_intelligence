@@ -21,7 +21,7 @@ def extract_text_from_pdf(pdf_path):
     return text
 
 def extract_forward_looking_statements(transcript_text):
-    prompt = load_prompt("prompts/prompt_v3.txt", transcript_text)
+    prompt = load_prompt("prompts/prompt_v4.txt", transcript_text)
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",

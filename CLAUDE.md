@@ -1,4 +1,4 @@
-# CLAUDE.md — Concall Intelligence
+# CLAUDE.md — Concall Intelligence / Indian Equity Screener
 
 This file gives you full context about this project. Read it at the start of every session.
 
@@ -6,32 +6,57 @@ This file gives you full context about this project. Read it at the start of eve
 
 ## How to Behave
 
-- **Do NOT write code unless explicitly asked.** Wait for "give me the code" or "show me the implementation" before writing any code.
-- When asked "how do I do X" or "what's the approach" — explain the concept only. No code.
+- Do NOT write code unless explicitly asked. Wait for "give me the code" or "show me the implementation".
+- When asked "how do I do X" or "what's the approach" — explain the concept only, no code.
 - Act as a senior AI engineer and thought partner. Help reason through decisions, explain concepts clearly, flag tradeoffs.
 - Be concise and specific. Avoid generic advice. Give examples where useful.
-- When reviewing code (pasted by the user), be direct and critical — point out what's wrong, what's missing, what could be better.
+- When reviewing code (pasted by the user), be direct and critical — point out what is wrong, what is missing, what could be better.
 - Do not repeat context back unnecessarily. Get to the point.
 
 ---
 
 ## What This Project Is
 
-**Concall Intelligence** — a tool that extracts forward-looking guidance statements from Indian company earnings call transcripts, stores them in a database, and compares what management promised against what actually happened. The headline feature is a management reliability score across quarters.
+Concall Intelligence — Indian Equity Screener
 
-### Why an LLM
+An automated pipeline that downloads Indian company earnings call transcripts from BSE/NSE, extracts quantifiable forward-looking guidance using an LLM, scores each company on guidance quality and credibility, cross-references with valuation data, and outputs a ranked list of companies worth deep research.
 
-Management phrases guidance in dozens of ways — "we expect", "we are targeting", "we are confident of". Rule-based keyword extraction misses most of it. An LLM understands meaning, making it the right tool for this task.
+Built for personal use by an Indian retail investor with a ₹40L direct equity portfolio. The goal is to surface mid and small cap companies where management is guiding strong growth but the market has not priced it in yet.
+
+This is a screening tool, not a buy signal.
 
 ---
 
 ## Who Is Building This
 
-- **Name:** Harsh Chandak
-- **Background:** ~5 years as a Data Engineer (JLR, Partners Group), IIT Bombay dual degree, AWS + GCP certified
-- **Goal:** Build this project as a portfolio piece for AI Engineer / Senior Data Engineer roles
-- **Strong in:** Python, SQL, PostgreSQL, FastAPI, SQLAlchemy, data pipelines
-- **New to:** LLM APIs, RAG, agents, evaluation frameworks — learning these through this project
+- Name: Harsh Chandak
+- Background: ~5 years as a Data Engineer (JLR, Partners Group), IIT Bombay dual degree, AWS + GCP certified
+- Goal: Build this as both a personal investing tool AND a portfolio piece for AI Engineer / Senior Data Engineer roles
+- Strong in: Python, SQL, PostgreSQL, FastAPI, SQLAlchemy, data pipelines
+- New to: LLM APIs, RAG, agents, evaluation frameworks — learning through this project
+- Personal use case: Indian retail investor, existing portfolio ₹40L, primary approach techno-fundamental
+
+---
+
+## Extraction Criteria — Critical
+
+A guidance statement is only extracted if it is trackable within 4 quarters. It must have a number AND a timeframe, or a specific commitment that can be verified at the next results.
+
+### Extract these:
+- Revenue guidance with numbers and timeframe
+- Margin guidance with target range
+- Volume growth with percentage
+- Capex commitments with amounts and timelines
+- Project commissioning timelines
+- Order book / contract announcements with values
+- Pricing guidance with percentages
+
+### Never extract these:
+- Macro optimism without company-specific commitment
+- Vague confidence statements
+- Demand commentary without numbers
+- Competitive commentary
+- Past quarter explanations
 
 ---
 
@@ -39,103 +64,50 @@ Management phrases guidance in dozens of ways — "we expect", "we are targeting
 
 | Layer | Choice |
 |---|---|
-| LLM API | OpenAI API (has existing credits) |
+| LLM API | OpenAI (gpt-4o-mini for extraction, gpt-4o for scoring) |
 | Backend | FastAPI |
-| Database | PostgreSQL (Docker) |
-| Vector Search | pgvector |
+| Database | PostgreSQL (Docker) + pgvector |
 | ORM | SQLAlchemy |
 | PDF Reading | pypdf |
 | Env Management | python-dotenv |
-| UI | Streamlit (v6) |
+| Valuation Data | Screener.in Premium export |
+| UI | Streamlit (Phase 3) |
 | Agents | Vanilla loop first, then LangGraph |
 | Observability | Langfuse |
 
 ---
 
-## Build Plan — Versions in Order
+## Version Strategy
 
-Build one version completely before starting the next. Each version is a working, committable thing.
+Three phases. Complete each version fully before moving to the next.
 
-### v1 — Extract from one transcript (Day 1)
-- Read a PDF transcript into text
-- Write a prompt that identifies forward-looking statements
-- Call OpenAI API and print results
-- Hand-label one transcript first as ground truth — compare system output against it
-- **Done when:** one command runs and prints a clean list matching most of the hand-labelled statements
+### PHASE 1 — AI Engineering Foundation
+- v1: Extract guidance from one transcript (IN PROGRESS)
+- v2: Structured output + automated eval + PostgreSQL
+- v3: Multi-transcript RAG + semantic search
 
-### v2 — Structured output + eval + PostgreSQL (Days 2–3)
-- Force output into a fixed Pydantic schema (company, quarter, speaker, quote, metric, value, timeline, confidence)
-- Build an eval script that measures precision and recall against hand-labelled ground truth
-- Save extracted records to PostgreSQL
-- Track prompt versions — change one thing at a time, record score changes
-- **Done when:** extraction runs on several transcripts, records land in PostgreSQL, eval script prints precision/recall
+### PHASE 2 — Screener Core
+- v4: Scoring engine (specificity + ambition)
+- v5: Credibility tracker (promise vs actual across quarters)
+- v6: Valuation integration + ranked output
 
-### v3 — RAG across many transcripts (Days 4–6)
-- Chunk transcripts by speaker turn (not fixed size — preserves meaning and speaker identity)
-- Embed chunks using OpenAI embedding model — pick one model and stick with it
-- Store vectors in pgvector (PostgreSQL extension)
-- Semantic search: turn a user question into a vector, find closest chunks
-- Add hybrid search (semantic + keyword) and reranking in v3.5
-- Evaluate retrieval separately from generation — know which one is failing
-- **Done when:** plain-English question across many transcripts returns correct, sourced answer
-
-### v4 — Model comparison + promise vs actual (Days 7–8)
-- Run eval across multiple OpenAI models — record quality, cost, latency for each
-- Route cheap extraction to a smaller model, hard reasoning to a stronger one
-- Build promise vs actual tracker: match earlier guidance to later reported results
-- Score management reliability per company across quarters
-- **Done when:** model comparison table exists in README, promise tracker working
-
-### v5 — Agent (Days 9–10)
-- Write a vanilla agent loop by hand first — no framework
-- Tools: fetch_transcript(), extract_statements(), save_to_db(), query_past_guidance(), compare_promise_vs_actual()
-- Add error handling, step cap (prevent infinite loops), output validation via Pydantic
-- Then optionally compare with LangGraph implementation
-- **Done when:** one instruction triggers full pipeline autonomously, recovers from failures, writes a log
-
-### v6 — API + UI + monitoring (Days 11–12)
-- Wrap logic in FastAPI endpoints
-- Add streaming responses (token-by-token)
-- Streamlit UI for non-technical access
-- Langfuse for latency, cost, error rate tracking
-- Real failures feed back into eval set — this is the production learning loop
-- **Done when:** deployed, anyone can log in and use it, monitoring dashboard live
-
----
-
-## Data Sources
-
-- Screener.in → company page → Concalls section
-- BSE/NSE India filings
-- Company investor relations pages
-
-Starting companies: **Asian Paints or Infosys** (clean transcripts, well-documented guidance, long history).
-
----
-
-## Key Concepts to Know
-
-**Forward-looking statement:** any sentence about the future — targets, expectations, guidance on revenue, margins, volumes, capex, expansion. NOT past quarter results.
-
-**Ground truth:** hand-labelled correct answers used to score the system. Built before the system is built.
-
-**Precision:** of what the system returned, how much was correct. Low precision = hallucination.
-
-**Recall:** of what was actually there, how much the system found. Low recall = missing statements.
-
-**Chunking by speaker turn:** split transcript at each speaker change, not every N words. Preserves meaning and speaker identity.
-
-**RAG:** retrieve relevant chunks first, then generate answer from only those chunks. Solves the token limit problem.
-
-**Model routing:** send cheap repetitive tasks (extraction) to a small model, hard reasoning (comparison) to a strong model. Cuts cost without quality loss.
+### PHASE 3 — Full Automation
+- v7: BSE/NSE automated pipeline (600+ companies)
+- v8: Agent + Streamlit dashboard + deployment
 
 ---
 
 ## Current Status
 
-🚧 **Day 1 — v1 in progress**
+Phase 1, v1 — Prompt iteration in progress
 
-Update this line at the start of each session.
+- Prompt versions completed: v1, v2, v3, v4
+- Best recall: 55% (prompt_v3)
+- Best precision: 100% (prompt_v4)
+- Best self-sufficiency: 5/8 passages (prompt_v4)
+- Target to complete v1: Recall ≥ 70%, Precision ≥ 80%, all passages self-sufficient
+
+Update this section at the start of every session.
 
 ---
 
@@ -143,26 +115,35 @@ Update this line at the start of each session.
 
 ```
 concall-intelligence/
-├── CLAUDE.md               ← this file
-├── .env                    ← real keys, gitignored
-├── .env.example            ← key names only, committed
+├── CLAUDE.md                  ← this file
+├── PROJECT.md                 ← full project document
+├── .env                       ← real keys, gitignored
+├── .env.example               ← key names only, committed
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
-├── Makefile
-├── transcripts/            ← PDF transcripts, gitignored
+├── eval_log.md                ← prompt iteration tracking
+├── main.py
+├── prompts/                   ← one file per prompt version
+│   ├── prompt_v1.txt
+│   ├── prompt_v2.txt
+│   ├── prompt_v3.txt
+│   └── prompt_v4.txt
+├── data/                      ← ground truth and eval sets
+│   ├── asian_paints_Q4_FY26_ground_truth.txt
+│   └── asian_paints_Q4_FY26_FLS.txt
+├── transcripts/               ← PDF transcripts, gitignored
 │   └── .gitkeep
-├── data/                   ← ground truth labels, eval sets
-└── src/
-    └── main.py
+└── venv/
 ```
 
 ---
 
 ## What NOT to Do
 
-- Do not install or suggest LangChain — vanilla approaches preferred
+- Do not suggest LangChain — vanilla approaches preferred
 - Do not suggest fine-tuning unless specifically asked
 - Do not skip evaluation — every version has an eval step
-- Do not build multiple versions simultaneously — finish one, commit, then move to next
+- Do not build multiple versions simultaneously — finish one, commit, then move
+- Do not extract vague or untrackable guidance — number + timeframe required
 - Do not write code unless explicitly asked

@@ -1,0 +1,43 @@
+You are an expert financial analyst reading an earnings call transcript. Your task is to extract every forward-looking passage from the transcript.
+
+WHAT TO EXTRACT:
+A forward-looking passage is any text where a speaker communicates something about the future — for the company, for a business segment, for the industry, or for the macroeconomic environment. This includes:
+- Targets and guidance: revenue, margins, volumes, capex
+- Plans and intentions: projects, investments, launches
+- Expectations: demand, competition, pricing, inflation
+- Predictions: market behaviour, industry trends, raw material costs
+- Commitments: dividends, timelines, delivery promises
+
+DO NOT EXTRACT:
+- Descriptions of past quarter results
+- Explanations of what caused past performance
+- General brand or vision statements with no future commitment
+
+HOW TO EXTRACT:
+Each extracted passage must follow these rules:
+
+1. COMPLETENESS: Include every sentence needed to make the forward-looking view fully clear. A passage can be one sentence or several. Stop when the forward-looking thought is complete.
+
+2. SELF-SUFFICIENCY: A reader who has not seen the transcript must fully understand the passage without any other context. Ask yourself: do I know what topic this is about? Do I know what is being predicted or committed to? Do I know the timeframe if one was mentioned? If any answer is no, include more context.
+
+3. CONTEXT BEFORE THE STATEMENT: If the forward-looking sentence refers to "this", "these", "it", "the segment", "these benefits", or any other reference — include the preceding sentence that establishes what those words refer to. The subject must be explicit in the passage.
+
+4. Q&A EXCHANGES: If an analyst's question contains the specific number, target, or claim that management then confirms, include the relevant part of the analyst's question as context before management's response.
+
+5. NO PARTIAL SENTENCES: Never start a passage mid-sentence. Always begin at the start of a complete thought.
+
+6. NO DUPLICATES: If the same guidance is confirmed multiple times, extract it once using the version with the most complete context.
+
+COVERAGE:
+- Extract from ALL parts of the transcript equally: management opening remarks, financial results discussion, and the Q&A section
+- Include statements from any speaker: MD, CEO, CFO, any finance team member
+- Cover all business segments and geographies, not just the primary business
+
+OUTPUT FORMAT:
+For each passage:
+Speaker: [name and title]
+Passage: [exact text from transcript, multiple sentences if needed]
+
+Here is the transcript:
+
+{transcript_text}
