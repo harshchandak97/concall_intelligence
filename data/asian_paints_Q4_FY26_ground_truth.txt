@@ -1,0 +1,168 @@
+Ground Truth — Forward Looking Statements
+Asian Paints Q4 FY26 Earnings Call Transcript
+Extracted manually. Used as answer key for v1 evaluation.
+Total statements: 20
+
+================================================================================
+
+ID: 1
+Quote: "we expect to commission first phase in the first half of this year. The VAM-VAE project will bring to us very strong innovation capabilities in the market and really change the fabric of the market from the area of looking at green paints in a strong manner."
+Speaker: Amit Syngle (MD & CEO)
+Metric: backward integration / VAM-VAE commissioning
+Page: 11
+
+--------------------------------------------------------------------------------
+
+ID: 2
+Quote: "Industrial coatings will continue to grow much higher than decorative, given the investment happening in the infrastructure and Government spending that is happening in this area."
+Speaker: Amit Syngle (MD & CEO)
+Metric: industrial coatings volume growth
+Page: 18
+
+--------------------------------------------------------------------------------
+
+ID: 3
+Quote: "International business again is expected to continue to grow and therefore, both industrial and international will strongly contribute to our growth going forward, as far as Q1 is concerned."
+Speaker: Amit Syngle (MD & CEO)
+Metric: international business growth
+Page: 18
+
+--------------------------------------------------------------------------------
+
+ID: 4
+Quote: "we have already taken close to about 10.5-11% price increase, and we are talking of going ahead and taking some more price increases, which are going to happen."
+Speaker: Amit Syngle (MD & CEO)
+Metric: pricing
+Page: 18
+
+--------------------------------------------------------------------------------
+
+ID: 5
+Quote: "We are looking at further price increases, which might happen in the market, as we go ahead."
+Speaker: Amit Syngle (MD & CEO)
+Metric: pricing
+Page: 19
+
+--------------------------------------------------------------------------------
+
+ID: 6
+Quote: "we do not intend to look at passing out the entire impact so that we can maintain a balance between inflation in the market and what we can really absorb."
+Speaker: Amit Syngle (MD & CEO)
+Metric: pricing / margin protection
+Page: 19
+
+--------------------------------------------------------------------------------
+
+ID: 7
+Quote: "the demand has been good both from the point of view of the rural demand as well as from the point of view of the urban centres. We expect at least some part of this demand to sustain in the market."
+Speaker: Amit Syngle (MD & CEO)
+Metric: demand outlook
+Page: 19
+
+--------------------------------------------------------------------------------
+
+ID: 8
+Quote: "we basically believe that going forward, we are still looking atleast a high single-digit volume growth in terms of what we would kind of achieve."
+Speaker: Amit Syngle (MD & CEO)
+Metric: volume growth
+Page: 19
+
+--------------------------------------------------------------------------------
+
+ID: 9
+Quote: "We feel that the competitive intensity will continue to grow in terms of how we see the year ahead."
+Speaker: Amit Syngle (MD & CEO)
+Metric: competitive intensity
+Page: 19
+
+--------------------------------------------------------------------------------
+
+ID: 10
+Quote: "we are still confident that demand conditions should continue giving us closer to high single-digit volume growth in the band of about 8-10%, as we predict going forward."
+Speaker: Amit Syngle (MD & CEO)
+Metric: volume growth
+Page: 20
+
+--------------------------------------------------------------------------------
+
+ID: 11
+Quote: "we will continue to take some more calibrated increases, which we think the market can absorb, and we are also aware of the fact that we should not really look at suppressing the demand by too much of increases, which happen in the market."
+Speaker: Amit Syngle (MD & CEO)
+Metric: pricing
+Page: 20
+
+--------------------------------------------------------------------------------
+
+ID: 12
+Quote: "we'll have to see the whole impact of backward integration over the year because today a part of it is coming in H1, as I said, and therefore, we will definitely get benefits, but we'll have to observe these benefits over a year, rather than getting those benefits immediately in Q1."
+Speaker: Amit Syngle (MD & CEO)
+Metric: backward integration / margins
+Page: 21
+
+--------------------------------------------------------------------------------
+
+ID: 13
+Quote: "But with a set of things which we are doing and some passing of some more price increases, we should see how we can retain our margin guidance going forward."
+Speaker: Amit Syngle (MD & CEO)
+Metric: margins
+Page: 21
+
+--------------------------------------------------------------------------------
+
+ID: 14
+Quote: "Maybe there could be some rationalization around the A&P spends, what we could see in the market, but when I mentioned competitive intensity, I meant about the whole area of discounting, which, according to us, will continue."
+Speaker: Amit Syngle (MD & CEO)
+Metric: competitive intensity / A&P spends
+Page: 21
+
+--------------------------------------------------------------------------------
+
+ID: 15
+Quote: "the larger impact we will definitely see in Q1 and Q2 which is going to happen."
+Speaker: Amit Syngle (MD & CEO)
+Metric: margins / raw material inflation impact
+Page: 21
+
+--------------------------------------------------------------------------------
+
+ID: 16
+Quote: "Amit Sachdeva: you would like to maintain your margin guidance, which has always been 18-20%, there is a high single-digit volume ambition as well for the year. Is this a way to interpret what you are saying? Amit Syngle: Absolutely right. We are maintaining our margin guidance, which is there. We are looking at the price increases that are happening and trying to see that we get into that area of 8-10% volume growth."
+Speaker: Amit Syngle (MD & CEO) confirming analyst summary
+Metric: margins / volume growth
+Page: 22
+
+--------------------------------------------------------------------------------
+
+ID: 17
+Quote: "some of those will be sticky till the time the situation carries on, there is no going back on it. And it is going to take some time before softening is going to really happen, all depending on how the geopolitical environment behaves."
+Speaker: Amit Syngle (MD & CEO)
+Metric: pricing stickiness
+Page: 22
+
+--------------------------------------------------------------------------------
+
+ID: 18
+Quote: "for the first six months, possibly yes, we are still open to more price increases we need to take from the current levels where we are, and that would really compensate for some deficit what we are seeing."
+Speaker: Amit Syngle (MD & CEO)
+Metric: pricing
+Page: 23
+
+--------------------------------------------------------------------------------
+
+ID: 19
+Quote: "the fact that what we are commissioning in this first half is only the VAE part, the entire VAM-VAE project as such will still take some time, and that is when we will start realizing the whole anticipated benefits. We will have to phase it out over the next one and a half to two years."
+Speaker: Parag Rane (AVP Finance)
+Metric: backward integration / VAM-VAE timeline
+Page: 25
+
+--------------------------------------------------------------------------------
+
+ID: 20
+Quote: "And we feel that over a period of time, it is good to maintain that 3-4% gap, which would remain from a point of view of overall direction between volume and value. Aditya Bhartia: But we are now speaking about a 3-4% gap versus, let's say, 5-6% that we used to speak earlier. Is that on account of the confidence that we are having that premium and PreLux categories are doing better? Amit Syngle: Currently, it looks like that. We should really be able to look at that gap of about 3-4%."
+Speaker: Amit Syngle (MD & CEO)
+Metric: volume-value gap / premiumization
+Page: 25
+
+================================================================================
+END OF GROUND TRUTH FILE
+Total: 20 statements
