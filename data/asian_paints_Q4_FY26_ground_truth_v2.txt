@@ -10,7 +10,7 @@ Quote: "we expect to commission first phase in the first half of this year. The 
 Speaker: Amit Syngle (MD & CEO)
 Metric: backward integration / VAM-VAE commissioning
 Page: 11
-
+Verification check: I can verify this by checking whether the phase 1 of the VAM-VAE project goes live in Q2
 --------------------------------------------------------------------------------
 
 ID: 2
@@ -18,7 +18,7 @@ Quote: "Industrial coatings will continue to grow much higher than decorative, g
 Speaker: Amit Syngle (MD & CEO)
 Metric: industrial coatings volume growth
 Page: 18
-
+Verification check: I can't verify - timeline issue - will it continue to grow throughout the year or particular quarters
 --------------------------------------------------------------------------------
 
 ID: 3
@@ -26,7 +26,7 @@ Quote: "International business again is expected to continue to grow and therefo
 Speaker: Amit Syngle (MD & CEO)
 Metric: international business growth
 Page: 18
-
+Verification check: What does grow mean, very difficult to quantify - >0% growth QoQ
 --------------------------------------------------------------------------------
 
 ID: 4
@@ -34,7 +34,7 @@ Quote: "we have already taken close to about 10.5-11% price increase, and we are
 Speaker: Amit Syngle (MD & CEO)
 Metric: pricing
 Page: 18
-
+Verification check: Not quantifiable on how much amount and no timeline
 --------------------------------------------------------------------------------
 
 ID: 5
@@ -42,7 +42,7 @@ Quote: "We are looking at further price increases, which might happen in the mar
 Speaker: Amit Syngle (MD & CEO)
 Metric: pricing
 Page: 19
-
+Verification check: Not quantifiable on how much price increase and no timeline
 --------------------------------------------------------------------------------
 
 ID: 6
@@ -50,7 +50,7 @@ Quote: "we do not intend to look at passing out the entire impact so that we can
 Speaker: Amit Syngle (MD & CEO)
 Metric: pricing / margin protection
 Page: 19
-
+Verification check: No quantifiable metric and timeline
 --------------------------------------------------------------------------------
 
 ID: 7
@@ -58,7 +58,7 @@ Quote: "the demand has been good both from the point of view of the rural demand
 Speaker: Amit Syngle (MD & CEO)
 Metric: demand outlook
 Page: 19
-
+Verification check: No quantifiable metric and timeline
 --------------------------------------------------------------------------------
 
 ID: 8
@@ -74,6 +74,7 @@ Quote: "We feel that the competitive intensity will continue to grow in terms of
 Speaker: Amit Syngle (MD & CEO)
 Metric: competitive intensity
 Page: 19
+Verification check: No quantifiable metric and timeline
 
 --------------------------------------------------------------------------------
 
@@ -90,6 +91,7 @@ Quote: "we will continue to take some more calibrated increases, which we think 
 Speaker: Amit Syngle (MD & CEO)
 Metric: pricing
 Page: 20
+Verification check: No quantifiable metric and timeline
 
 --------------------------------------------------------------------------------
 
@@ -98,7 +100,7 @@ Quote: "we'll have to see the whole impact of backward integration over the year
 Speaker: Amit Syngle (MD & CEO)
 Metric: backward integration / margins
 Page: 21
-
+Verification check: Some backward integration should go live in H1 
 --------------------------------------------------------------------------------
 
 ID: 13

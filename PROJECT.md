@@ -28,6 +28,8 @@ An automated pipeline that:
 
 This is a screening tool, not a buy signal. The output is a shortlist for further human research.
 
+Target universe: Companies with market cap ₹500 crore to ₹8,000 crore. Small and mid cap focus. This is where the information edge is highest — thin institutional coverage, simpler single-business P&Ls, and management guidance that maps cleanly to company-level financial metrics. Large caps are used for testing and eval only.
+
 ---
 
 ## Extraction Criteria — What Gets Extracted
@@ -83,6 +85,8 @@ Did they deliver on what they said last quarter?
 - Ratio below 0.75 → Score 1 (serial over-promiser, discard)
 
 This is the most critical filter. Indian promoter-run companies are notoriously aspirational. Without credibility filtering, the output list fills up with chronic over-promisers.
+
+**Credibility scoring scope:** Automated credibility scoring is computed only on company-level revenue and EBITDA/PBDIT margin guidance, matched against Screener.in quarterly exports. Segment-level guidance (volume growth, sub-segment margins) and binary events (commissioning timelines) are extracted and tagged but excluded from automated credibility scoring — they require manual verification from subsequent transcripts.
 
 ### Layer 4: Valuation Discount (25% weight)
 Is the stock cheap relative to the growth being guided?
@@ -243,6 +247,10 @@ Goal: Scale to 600+ companies, automate the pipeline, ship the dashboard.
 
 ## Known Hard Problems
 
+### Segment-Level Guidance Verification
+Large and multi-segment companies guide on segment-level metrics (decorative volume growth, sub-segment margins) that cannot be reliably matched against Screener.in exports. Automated verification would require parsing the next quarter’s transcript — introducing LLM hallucination risk at the verification stage.
+Fix: Restrict automated credibility scoring to company-level revenue and EBITDA/PBDIT margin only. Segment-level guidance is extracted and tagged as credibility_scorable: false — available for human review but excluded from automated scoring. This is also why the target universe is ₹500cr–8,000cr market cap, where single-business P&Ls dominate and guidance is almost always company-level.
+
 ### Scanned PDFs
 ~10-15% of concall PDFs are scanned images. Standard text extraction fails.
 Fix for V1: Skip and flag. Add OCR (Tesseract or AWS Textract) in Phase 3.
@@ -279,10 +287,11 @@ Total ongoing: ~₹500-600/month after setup.
 
 Phase 1, v1 — Prompt iteration in progress (prompt_v4 complete)
 
-Ground truth: 20 statements labelled from Asian Paints Q4 FY26
+Ground truth: v3 finalised — 4 items from Asian Paints Q4 FY26, structure locked
 Best recall so far: 55% (prompt_v3)
 Best precision so far: 100% (prompt_v4)
 Best self-sufficiency: 5/8 passages (prompt_v4)
+Next action: Iterate prompt v5 targeting recall ≥ 70%
 
 Next milestone: Recall ≥ 70% + Precision ≥ 80% + all passages self-sufficient → v1 done → move to v2
 

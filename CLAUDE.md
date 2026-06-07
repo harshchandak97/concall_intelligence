@@ -25,6 +25,8 @@ Built for personal use by an Indian retail investor with a ₹40L direct equity 
 
 This is a screening tool, not a buy signal.
 
+Target universe: Companies with market cap ₹500 crore to ₹8,000 crore. This is where the tool has the most edge — thin institutional coverage, simpler single-business P&Ls, and guidance that maps cleanly to company-level metrics.
+
 ---
 
 ## Who Is Building This
@@ -57,6 +59,30 @@ A guidance statement is only extracted if it is trackable within 4 quarters. It 
 - Demand commentary without numbers
 - Competitive commentary
 - Past quarter explanations
+
+---
+
+## Ground Truth Structure
+
+Every ground truth item and every LLM output item uses this exact structure:
+
+```
+- passage              # verbatim from PDF, self-sufficient
+- speaker              # who said it
+- page_number          # integer
+- metric               # from controlled vocabulary (see notes.md)
+- guidance_value       # numeric range or value e.g. "18-20" or "8-10", null if not applicable
+- guidance_unit        # unit of measurement e.g. "%", "crore", null if not applicable
+- timeline             # e.g. "H1 FY27" or "FY27" — clean value only, no explanatory notes
+- credibility_scorable # true/false
+```
+
+credibility_scorable = true only when:
+- Metric is company-level revenue or EBITDA/PBDIT margin
+- Value is directly matchable against Screener.in quarterly export
+- No segment-level or derived metrics
+
+Current ground truth file: data/asian_paints_Q4_FY26_ground_truth_v3.txt
 
 ---
 
@@ -105,6 +131,8 @@ Phase 1, v1 — Prompt iteration in progress
 - Best recall: 55% (prompt_v3)
 - Best precision: 100% (prompt_v4)
 - Best self-sufficiency: 5/8 passages (prompt_v4)
+- Ground truth: v3 finalised (4 items, Asian Paints Q4 FY26) — structure locked
+- Next action: Iterate prompt v5 targeting recall ≥ 70%
 - Target to complete v1: Recall ≥ 70%, Precision ≥ 80%, all passages self-sufficient
 
 Update this section at the start of every session.
@@ -129,8 +157,9 @@ concall-intelligence/
 │   ├── prompt_v2.txt
 │   ├── prompt_v3.txt
 │   └── prompt_v4.txt
+├── notes.md                   ← decisions and future implementation notes
 ├── data/                      ← ground truth and eval sets
-│   ├── asian_paints_Q4_FY26_ground_truth.txt
+│   ├── asian_paints_Q4_FY26_ground_truth_v3.txt
 │   └── asian_paints_Q4_FY26_FLS.txt
 ├── transcripts/               ← PDF transcripts, gitignored
 │   └── .gitkeep
