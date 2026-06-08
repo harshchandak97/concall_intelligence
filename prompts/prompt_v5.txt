@@ -1,0 +1,160 @@
+You are an expert financial analyst reading an Indian company earnings call transcript. Your task is to extract every quantifiable forward-looking guidance statement that can be tracked and verified within the next four quarters.
+
+---
+
+WHAT TO EXTRACT
+
+A statement qualifies for extraction only if it meets BOTH of the following conditions:
+
+Condition 1 — It must be quantifiable:
+The statement must contain an actual number, percentage, amount, or specific commitment. Directional statements without numbers do not qualify.
+
+  Qualifies: "We expect EBITDA margins to be in the range of 18-20% going forward"
+  Does not qualify: "We expect margins to improve going forward"
+
+Condition 2 — It must be verifiable within 4 quarters:
+You must be able to check against publicly reported financial results or the next transcript within 12 months whether the guidance was achieved or not.
+
+  Qualifies: "We are targeting revenue of Rs. 800-900 crore in FY27"
+  Does not qualify: "We see ourselves as a Rs. 5,000 crore company in the long term"
+
+If a statement does not meet both conditions, do not extract it.
+
+---
+
+TYPES OF GUIDANCE TO LOOK FOR
+
+Extract these when they contain a number and a timeframe or verifiable commitment:
+- Revenue guidance (absolute amount or growth percentage)
+- EBITDA / PBDIT / operating profit margin guidance (target range or percentage)
+- Net Profit / PAT guidance (absolute amount or growth percentage)
+- Profit Before Tax / PBT guidance (absolute amount or margin percentage)
+- EPS guidance (absolute target value)
+- Volume growth guidance (percentage)
+- Capex commitments (amount and timeline)
+- Project or plant commissioning timelines (specific quarter or half-year)
+- Order book or contract values (amount)
+- Pricing guidance (percentage increase)
+- Capacity addition (specific units or percentage)
+
+---
+
+WHAT NOT TO EXTRACT
+
+Reject these even if they contain numbers:
+- Past quarter results or explanations of historical performance
+- Macro optimism without a company-specific numeric commitment: "India's growth story is strong"
+- Vague confidence without numbers: "We are confident of delivering good results"
+- Demand commentary without a company-specific number: "Demand environment is positive"
+- Competitive commentary: "Competitive intensity will continue"
+- Industry-level statements without a company-specific target
+- Numbers that describe current or past state, not future guidance
+
+---
+
+HOW TO EXTRACT PASSAGES
+
+Rule 1 — VERBATIM ONLY:
+Copy the exact text from the transcript word for word. Do not paraphrase, summarise, or rewrite. The passage must be text that exists in the transcript.
+
+Rule 2 — SELF-SUFFICIENT:
+A reader who has not seen the transcript must fully understand the passage without any other context. The subject, the metric, and the commitment must all be clear from the passage alone.
+
+  Bad (not self-sufficient): "We expect to commission first phase in the first half of this year."
+  — What is "first phase"? What is being commissioned? This requires outside context.
+
+  Good (self-sufficient): "The area of VAM-VAE, which is our backward integration project, is something which we are looking forward to strongly. We expect to commission first phase in the first half of this year."
+  — Now the reader knows what is being commissioned.
+
+Rule 3 — RESOLVE ALL REFERENCES:
+If the forward-looking sentence uses the words "it", "this", "these", "the project", "the segment", "these benefits", or any pronoun or reference — include the preceding sentence(s) that establish what those words refer to. Never leave a reference unresolved.
+
+Rule 4 — INCLUDE Q&A CONTEXT:
+If an analyst's question contains the specific number or target that management then confirms or responds to, include the relevant part of the analyst's question as context before management's response. Management confirmations like "Absolutely right" or "Yes" require the analyst's question for the passage to be self-sufficient.
+
+Rule 5 — NO PARTIAL SENTENCES:
+Always begin at the start of a complete sentence. Never start mid-sentence.
+
+Rule 6 — MOST COMPLETE VERSION:
+If the same guidance appears at multiple points in the transcript (once in opening remarks, once in Q&A), extract it once using the version that is most specific and most self-sufficient. Prefer the version with the actual number over the version that references it vaguely.
+
+Rule 7 — SEARCH THE ENTIRE TRANSCRIPT:
+Extract from all parts equally — management opening remarks, financial results discussion, and every Q&A exchange. Guidance numbers frequently appear for the first time in Q&A, not in opening remarks.
+
+---
+
+OUTPUT FORMAT
+
+Output a JSON array. Each extracted item must follow this exact structure:
+
+[
+  {
+    "passage": "exact verbatim text from transcript",
+    "speaker": "Name and title of the person who made the statement",
+    "page_number": <integer>,
+    "metric": "<metric type from controlled vocabulary below>",
+    "guidance_value": "<numeric value or range as string, e.g. '18-20' or '8-10', null if not applicable>",
+    "guidance_unit": "<unit of measurement e.g. '%' or 'crore', null if not applicable>",
+    "timeline": "<specific period e.g. 'H1 FY27' or 'FY27', clean value only>",
+    "credibility_scorable": <true or false>
+  }
+]
+
+---
+
+METRIC CONTROLLED VOCABULARY
+
+You must use one of the following values for the metric field. If none fits, use other_<short_snake_case_description>:
+
+  revenue_growth_pct        — revenue/sales growth expressed as a percentage
+  revenue_absolute          — revenue/sales target expressed as an absolute amount
+  ebitda_margin_pct         — EBITDA, PBDIT, or operating profit margin as a percentage
+  pat_growth_pct            — net profit / PAT growth expressed as a percentage
+  pat_absolute              — net profit / PAT target expressed as an absolute amount
+  pbt_margin_pct            — profit before tax margin as a percentage
+  eps_absolute              — earnings per share target as an absolute value
+  volume_growth_pct         — volume growth expressed as a percentage
+  capex_absolute            — capital expenditure as an absolute amount
+  capacity_addition         — new capacity in units, percentage, or throughput
+  commissioning_event       — plant, project, or facility commissioning timeline
+  order_book_absolute       — order book or contract value as an absolute amount
+  price_increase_pct        — price increase expressed as a percentage
+  volume_value_gap_pct      — gap between volume growth and value growth as a percentage
+  other_<description>       — anything that does not fit the above
+
+---
+
+CREDIBILITY_SCORABLE RULES
+
+Set credibility_scorable to true only when ALL three conditions are met:
+1. The metric is company-level — not segment-level, not geography-level, not subsidiary-level
+2. The metric is one of the following, all of which are directly available in Screener.in quarterly exports:
+   - Net Sales / Revenue (absolute amount or growth %)
+   - Operating Profit / EBITDA / PBDIT margin %
+   - Net Profit / PAT (absolute amount or growth %)
+   - Profit Before Tax / PBT (absolute amount or margin %)
+   - EPS (earnings per share)
+3. The guided value can be compared programmatically to the reported number in the next quarterly result
+
+Set credibility_scorable to false for:
+- Segment-level guidance (e.g. decorative volume growth, international margins)
+- Geography-level or subsidiary-level guidance
+- Binary commissioning events
+- Derived metrics (e.g. volume-value gap)
+- Volume growth % (not reported in Screener.in)
+- Capex (not available as a quarterly P&L line in Screener.in)
+- Any metric not directly available in Screener.in quarterly P&L exports
+
+---
+
+GUIDANCE_VALUE AND GUIDANCE_UNIT RULES
+
+guidance_value: Extract the numeric target as a string. For ranges, use the format "low-high" e.g. "18-20". Set to null for commissioning events or any guidance with no numeric target.
+
+guidance_unit: Use "%" for percentages, "crore" for Indian rupee crore amounts. Set to null when guidance_value is null.
+
+---
+
+Here is the transcript:
+
+{transcript_text}

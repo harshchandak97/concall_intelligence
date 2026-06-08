@@ -274,14 +274,411 @@ GT 9, 11, 12, 17 were found in Run 3 but lost in Run 4. The model consolidated i
 
 ---
 
+## Run 5
+**Date:** 08 June 2026
+**Model:** gpt-4o-mini
+**Prompt:** prompt_v5
+**Transcript:** Asian Paints Q4 FY26
+
+### Ground Truth Change
+Ground truth rebuilt from scratch as v3. Criteria tightened to quantifiable forward-looking items only (number + timeframe, trackable within 4 quarters). Count reduced from 20 statements to 4 items. Structure changed to include metric, guidance_value, guidance_unit, timeline, credibility_scorable fields. All previous run recall numbers are against the old 20-statement ground truth and are not directly comparable from this run onward.
+
+### Prompt Changes from v4
+- Criteria narrowed: quantifiable only — number + timeframe required, not all forward-looking statements
+- Structured JSON output introduced for the first time — passage, speaker, page_number, metric, guidance_value, guidance_unit, timeline, credibility_scorable
+- Metric controlled vocabulary added with 14 standard types plus other_ convention
+- credibility_scorable rules added — true only for company-level revenue, EBITDA margin, PAT, PBT, EPS
+- Rule 7 added: search entire transcript including every Q&A exchange
+
+### Raw Numbers
+- Total items extracted: 4
+- False positives: 1 (price increase — past action extracted as future guidance)
+- Valid extractions: 3
+
+### Precision
+- Items matching ground truth: 3
+- False positives: 1
+- **Strict Precision: 3/4 = 75%** — below 80% target
+
+### Recall
+- GT items found: 3 out of 4
+- **Recall: 3/4 = 75%** — meets ≥70% target
+
+### GT Items Found
+- GT 2 (Decorative volume growth 8-10%, FY27) ✅
+- GT 3 (PBDIT margin 18-20%, FY27) ✅ — but with issues (see below)
+- GT 1 (VAM-VAE commissioning, H1 FY27) ✅ — but with issues (see below)
+
+### GT Items Missed
+- GT 4 — Volume-value gap 3-4%, FY27 — not extracted at all
+
+### Issues Per Extracted Item
+
+**Item 1 — VAM-VAE Commissioning**
+Self-sufficiency: FAIL. Passage extracted as: "We expect to commission first phase in the first half of this year." — "first phase" of what is unresolved. "This year" is ambiguous without knowing which year. Ground truth passage includes VAM-VAE context sentence. The self-sufficiency rule was not followed despite being in the prompt.
+
+**Item 2 — Volume Growth 8-10%**
+Pass. Passage from page 22 is acceptable. Stronger version exists on page 20 (Mihir Shah Q&A) but this extraction is valid.
+
+**Item 3 — PBDIT Margin 18-20%**
+guidance_value hallucinated. Passage extracted as: "We are maintaining our margin guidance, which is there." The number 18-20 does not appear anywhere in this passage. LLM sourced the value from a different part of the transcript and placed it in guidance_value without including the sentence containing it. Passage fails self-sufficiency (no number visible) and Rule 4 (guidance_value must appear in passage — rule not yet in prompt at v5).
+
+**Item 4 — Price Increase 10.5-11%**
+False positive. Passage: "We have already taken close to about 10.5-11% price increase, and we are talking of going ahead and taking some more price increases." The specific number (10.5-11%) describes past action. The forward-looking part ("some more") has no specific number. Neither half qualifies under extraction criteria. Extracted because WHAT NOT TO EXTRACT did not have an explicit example of this pattern.
+
+### Run Comparison (New Ground Truth Basis — 4 Items)
+| Run | Prompt | Precision | Recall | Items | Self-Sufficient | False Positives |
+|---|---|---|---|---|---|---|
+| 5 | prompt_v5 | 75% | 75% | 4 | 2/4 | 1 |
+
+### Root Cause Analysis
+1. Self-sufficiency rule not strong enough — LLM identified the right passage location but extracted an incomplete sentence without its context. Rule 2 needs a mandatory verification step, not just an example.
+2. guidance_value sourced from outside the passage — no rule in v5 prevented this. LLM inferred the number from context rather than including the sentence that contains it.
+3. Past action + vague future intent extracted as guidance — WHAT NOT TO EXTRACT lacked an explicit example of this specific pattern.
+4. Volume-value gap missed — discussed late in transcript across two Q&A exchanges, likely underweighted despite Rule 7.
+
+### Changes Made for prompt_v6
+- Rule 2 (self-sufficiency) replaced with mandatory 4-question check: what, number, when, who — all must be yes before passage is written
+- New Rule 4: guidance_value must appear explicitly in the passage text — if not, expand passage or do not extract
+- WHAT NOT TO EXTRACT: added explicit example of past action + vague future intent pattern
+- New self-check section: 5-point checklist LLM must run against every item before writing final JSON
+
+---
+
 ## Summary Table
 
-| Run | Prompt | Model | Precision | Recall | Passages | Self-Sufficient | Not FLS |
+| Run | Prompt | Model | Precision | Recall | Passages | Self-Sufficient | Not FLS | Fabrications |
+|---|---|---|---|---|---|---|---|---|
+| 1 | prompt_v1 | gpt-4o-mini | 65% | 50% | 18 | 1/17 | 1 | 0 |
+| 2 | prompt_v2 | gpt-4o-mini | 67% | 45% | 15 | 1/15 | 0 | 0 |
+| 3 | prompt_v3 | gpt-4o-mini | 62% | 55% | 21 | 1/21 | 2 | 0 |
+| 4 | prompt_v4 | gpt-4o-mini | 100% | 50% | 8 | 5/8 | 0 | 0 |
+| 5* | prompt_v5 | gpt-4o-mini | 75% | 75% | 4 | 2/4 | 1 | 0 |
+| 6* | prompt_v6 | gpt-4o-mini | 60% | 75% | 5 | 1/5 | 1 | 1 |
+| 7* | prompt_v7 | gpt-4o-mini | 75% | 75% | 4 | 1/4 | 1 | 0 |
+| 8* | prompt_v7 | gpt-4o | 50% | 50% | 4 | 3/4 | 0 | 0 |
+| 9* | prompt_v8 | gpt-4o | 67% | 50% | 3 | 2/3 | 1 | 0 |
+
+*Run 5 onward uses new ground truth v3 (4 items, quantifiable only). Not directly comparable to Runs 1–4 which used 20-statement ground truth.
+
+---
+
+## Run 6
+**Date:** 08 June 2026
+**Model:** gpt-4o-mini
+**Prompt:** prompt_v6
+**Transcript:** Asian Paints Q4 FY26
+
+### Prompt Changes from v5
+- Rule 2 (self-sufficiency) replaced with mandatory 4-question check: what, number, when, who
+- New Rule 4: guidance_value must appear explicitly in the passage text — expand passage or do not extract
+- WHAT NOT TO EXTRACT: explicit example added for past action + vague future intent pattern
+- New self-check section: 5-point checklist before outputting final JSON
+
+### Raw Numbers
+- Total items extracted: 5
+- False positives: 1 (price increase — past action, same as Run 5)
+- Duplicates: 1 (volume growth extracted twice — pages 20 and 22)
+- Fabricated passages: 1 (margin guidance — words added to transcript text)
+- Valid extractions: 3
+
+### Precision
+- Items matching ground truth: 3
+- False positives: 1
+- Duplicates: 1
+- **Strict Precision: 3/5 = 60%** — regression from Run 5
+
+### Recall
+- GT items found: 3 out of 4
+- **Recall: 3/4 = 75%** — same as Run 5
+- GT 4 (volume-value gap 3-4%) still not found
+
+### GT Items Found
+- GT 1 (VAM-VAE commissioning, H1 FY27) ✅ — but self-sufficiency still failing
+- GT 2 (Decorative volume growth 8-10%, FY27) ✅ — but extracted twice and credibility_scorable wrong
+- GT 3 (PBDIT margin 18-20%, FY27) ✅ — but passage fabricated
+
+### GT Items Missed
+- GT 4 — Volume-value gap 3-4%, FY27
+
+### Issues Per Extracted Item
+
+**Item 1 — VAM-VAE Commissioning**
+Identical failure to Run 5. Passage: "We expect to commission first phase in the first half of this year." — "first phase" unresolved, "this year" ambiguous. 4-question self-check in v6 was not applied. Third consecutive run with same self-sufficiency failure on same passage.
+
+**Item 2 — Volume Growth (page 22)**
+credibility_scorable set to true — wrong. volume_growth_pct is explicitly listed as false in the prompt. Duplicate of Item 3 — same metric, same timeline, extracted twice in violation of Rule 7.
+
+**Item 3 — Volume Growth (page 20)**
+Duplicate of Item 2. Additionally, guidance_value = "8-10" is not in this passage — passage says "high single-digit volume growth". Rule 4 violation. credibility_scorable = true also wrong, same as Item 2.
+
+**Item 4 — PBDIT Margin**
+Fabricated passage. Extracted text: "We are maintaining our margin guidance of 18-20%." Actual transcript text: "We are maintaining our margin guidance, which is there." LLM added "of 18-20%" to satisfy Rule 4 (guidance_value must appear in passage), violating Rule 1 (verbatim only). New rule introduced a worse failure than the one it was trying to fix. Rules conflicted and LLM resolved by fabricating text.
+
+**Item 5 — Price Increase**
+Same false positive as Run 5. Explicit example added in v6 did not prevent recurrence.
+
+### Run Comparison (New Ground Truth Basis — 4 Items)
+| Run | Prompt | Precision | Recall | Items | Self-Sufficient | False Positives | Fabrications |
 |---|---|---|---|---|---|---|---|
-| 1 | prompt_v1 | gpt-4o-mini | 65% | 50% | 18 | 1/17 | 1 |
-| 2 | prompt_v2 | gpt-4o-mini | 67% | 45% | 15 | 1/15 | 0 |
-| 3 | prompt_v3 | gpt-4o-mini | 62% | 55% | 21 | 1/21 | 2 |
-| 4 | prompt_v4 | gpt-4o-mini | 100% | 50% | 8 | 5/8 | 0 |
+| 5 | prompt_v5 | 75% | 75% | 4 | 2/4 | 1 | 0 |
+| 6 | prompt_v6 | 60% | 75% | 5 | 1/5 | 1 | 1 |
+
+### Root Cause Analysis
+1. Rule conflict caused fabrication — Rule 4 (guidance_value in passage) and Rule 1 (verbatim) conflicted. LLM prioritised the newer Rule 4 by inserting the number directly into the passage rather than expanding to the adjacent sentence. No precedence was established between rules.
+2. Self-sufficiency rule still failing on same passage — 4-question check did not help. LLM is pattern-matching on the passage location rather than applying the principle. Example in Rule 2 is VAM-VAE-specific — possible overfitting to one company.
+3. Duplicate not caught — Rule 7 said "most complete version" but did not state that same metric + same timeline = same item regardless of phrasing. LLM treated "high single-digit" and "8-10%" as separate items.
+4. credibility_scorable wrong for volume_growth_pct twice — rule existed in plain language but was ignored. Needs a concrete typed example, not just a bullet point.
+5. Price increase false positive persists — generalisation failure at model level. May require model upgrade rather than more prompt instructions.
+
+### Changes Made for prompt_v7
+- Rule 1: Added explicit precedence statement — verbatim overrides all other rules, expansion is always the solution not insertion
+- Rule 2: Replaced VAM-VAE company-specific example with a generic manufacturing example to prevent overfitting
+- Rule 7 reworded: same metric + same timeline = one item regardless of phrasing, with a worked duplicate example
+- credibility_scorable: volume_growth_pct and capex_absolute called out as always false with reason stated explicitly
+- credibility_scorable false list: removed company-specific examples, replaced with generic language
+- Self-check section removed entirely — five runs in, it has not prevented a single failure
+- Prompt is shorter than v6
+
+---
+
+## Run 7
+**Date:** 08 June 2026
+**Model:** gpt-4o-mini
+**Prompt:** prompt_v7
+**Transcript:** Asian Paints Q4 FY26
+
+### Prompt Changes from v6
+- Rule 1: Added explicit precedence statement — verbatim overrides all other rules, expansion is always the solution not insertion
+- Rule 2: Replaced VAM-VAE company-specific example with generic manufacturing plant example
+- Rule 7 reworded: same metric + same timeline = one item regardless of phrasing, with worked duplicate example
+- credibility_scorable: volume_growth_pct and capex_absolute called out as always false with reason stated
+- credibility_scorable false list: removed company-specific examples
+- Self-check section removed entirely
+- Prompt shorter than v6
+
+### Raw Numbers
+- Total items extracted: 4
+- False positives: 1 (price increase — past action, fourth consecutive run)
+- Duplicates: 0
+- Fabricated passages: 0
+- Valid extractions: 3
+
+### Precision
+- Items matching ground truth: 3
+- False positives: 1
+- **Strict Precision: 3/4 = 75%** — recovery from Run 6
+
+### Recall
+- GT items found: 3 out of 4
+- **Recall: 3/4 = 75%** — same as Runs 5 and 6
+- GT 4 (volume-value gap 3-4%) missed for fourth consecutive run
+
+### GT Items Found
+- GT 1 (VAM-VAE commissioning, H1 FY27) ✅ — self-sufficiency still failing
+- GT 2 (Decorative volume growth 8-10%, FY27) ✅ — first fully clean extraction across all fields
+- GT 3 (PBDIT margin 18-20%, FY27) ✅ — guidance_value still not in passage
+
+### GT Items Missed
+- GT 4 — Volume-value gap 3-4%, FY27 — fourth consecutive miss
+
+### Issues Per Extracted Item
+
+**Item 1 — VAM-VAE Commissioning**
+Fourth consecutive identical failure. Passage: "We expect to commission first phase in the first half of this year." — "first phase" unresolved, "this year" ambiguous. Generic example in v7 Rule 2 did not change outcome. All other fields correct.
+
+**Item 2 — Volume Growth**
+First fully clean extraction across all seven runs. Passage contains "8-10%" — Rule 4 satisfied. credibility_scorable = false is now correct — always-false callout for volume_growth_pct in v7 worked. Ground truth passage from page 20 is stronger but this extraction is valid. All fields correct.
+
+**Item 3 — PBDIT Margin**
+Reverted to Run 5 behaviour. No fabrication (Rule 1 precedence worked) but guidance_value = "18-20" is still not present in the passage text "We are maintaining our margin guidance, which is there." Rule 4 still violated. LLM is sourcing the number from elsewhere in the transcript. Correct approach requires including the analyst Q&A exchange where "18-20%" is stated explicitly and Syngle confirms it.
+
+**Item 4 — Price Increase**
+Fourth consecutive false positive. Unchanged from every previous run. Explicit example in v6 and v7 has not worked.
+
+### v7 Fix Effectiveness
+| Fix | Target Failure | Result |
+|---|---|---|
+| Rule 1 precedence statement | Fabrication in Run 6 | ✅ Fixed — no fabrication |
+| Generic Rule 2 example | Self-sufficiency overfitting | ❌ No change — VAM-VAE still fails |
+| Rule 7 duplicate reword | Duplicate in Run 6 | ✅ Fixed — no duplicates |
+| volume_growth_pct always false | credibility_scorable errors in Run 6 | ✅ Fixed — correct in Run 7 |
+
+### Run Comparison (New Ground Truth Basis — 4 Items)
+| Run | Prompt | Precision | Recall | Items | Self-Sufficient | False Positives | Fabrications |
+|---|---|---|---|---|---|---|---|
+| 5 | prompt_v5 | 75% | 75% | 4 | 2/4 | 1 | 0 |
+| 6 | prompt_v6 | 60% | 75% | 5 | 1/5 | 1 | 1 |
+| 7 | prompt_v7 | 75% | 75% | 4 | 1/4 | 1 | 0 |
+
+### Persistent Failures After 7 Runs
+Four issues have failed across 3+ consecutive runs despite targeted prompt changes:
+
+1. **VAM-VAE self-sufficiency** — Failed every run. LLM consistently picks the shorter sentence on page 11 rather than expanding to include context. Prompt instructions and examples have not changed the outcome.
+2. **Margin guidance_value** — Failed every run except Run 6 where it fabricated instead. LLM knows the number is 18-20% but does not include the analyst Q&A exchange that contains it. Correct passage requires Rule 5 (Q&A context) to be applied but has not been.
+3. **Price increase false positive** — Failed every single run (7/7). Explicit example added in v6 and retained in v7 has not helped.
+4. **Volume-value gap** — Missed all seven runs. Discussed pages 25–26 near end of transcript across two Q&A exchanges.
+
+### Root Cause Assessment
+All four persistent failures are consistent with gpt-4o-mini model capability limits rather than prompt design gaps. Adding more prompt instructions has yielded diminishing returns since Run 5.
+
+### Next Step Before v8
+Test prompt_v7 unchanged on gpt-4o. If persistent failures resolve, confirm model upgrade and proceed. If they persist on gpt-4o, then investigate prompt design further.
+
+---
+
+## Run 8
+**Date:** 08 June 2026
+**Model:** gpt-4o (upgrade from gpt-4o-mini)
+**Prompt:** prompt_v7 (unchanged)
+**Transcript:** Asian Paints Q4 FY26
+
+### Purpose of This Run
+Test whether persistent gpt-4o-mini failures are model-level or prompt-level. Prompt v7 run unchanged on gpt-4o.
+
+### Raw Numbers
+- Total items extracted: 4
+- False positives: 0 (price increase not extracted — improvement)
+- Duplicates: 2 (volume growth extracted three times — Items 2, 3, 4)
+- Fabricated passages: 0
+- Valid extractions: 2
+
+### Precision
+- Items matching ground truth correctly: 2 (GT1, GT2)
+- Duplicates: 2
+- **Strict Precision: 2/4 = 50%** — regression from Run 7
+
+### Recall
+- GT items found: 2 out of 4
+- **Recall: 2/4 = 50%** — regression from Run 7
+- GT3 (PBDIT margin) not extracted cleanly
+- GT4 (volume-value gap) missed for fifth consecutive run
+
+### GT Items Found
+- GT1 (VAM-VAE commissioning, H1 FY27) ✅ — self-sufficiency FIXED by model upgrade
+- GT2 (Decorative volume growth 8-10%, FY27) ✅ — found in Item 3, but also duplicated in Items 2 and 4
+
+### GT Items Missed
+- GT3 — PBDIT margin 18-20%, FY27 — attempted in Item 4 but wrong metric label, number not in passage
+- GT4 — Volume-value gap 3-4%, FY27 — fifth consecutive miss
+
+### Issues Per Extracted Item
+
+**Item 1 — VAM-VAE Commissioning**
+Fixed. Passage now includes "VAM-VAE" and "it is a signature project" — subject resolved. Failed across all 7 gpt-4o-mini runs, fixed on first gpt-4o run. Confirms model-level issue. "This year" slightly ambiguous but substantially self-sufficient. All fields correct.
+
+**Item 2 — Volume Growth (page 20)**
+guidance_value = "high single-digit" is not a numeric value. Schema requires a number. Passage text says "high single-digit" — no numeric target present, fails Condition 1 (must be quantifiable). Should not have been extracted. Also duplicate of Items 3 and 4.
+
+**Item 3 — Volume Growth (page 21)**
+Clean extraction of GT2. Passage contains "8-10%", guidance_value valid, credibility_scorable correct. Correct choice per Rule 7. Invalid only because Items 2 and 4 are duplicates of same guidance.
+
+**Item 4 — Volume Growth (page 22)**
+Third duplicate of volume growth. Passage "Absolutely right. We are maintaining our margin guidance, which is there..." contains margin guidance topic but model labelled as volume_growth_pct and extracted volume number instead. Margin opportunity missed. Also starts with "Absolutely right" without including analyst question — Rule 5 not applied.
+
+### Model Upgrade Assessment
+| Failure | gpt-4o-mini | gpt-4o | Verdict |
+|---|---|---|---|
+| VAM-VAE self-sufficiency | ❌ All 7 runs | ✅ Fixed | Model-level issue confirmed |
+| Price increase false positive | ❌ All 7 runs | ✅ Fixed | Model-level issue confirmed |
+| Margin guidance_value | ❌ Every run | ❌ Still missing | Prompt issue — Rule 5 not triggered |
+| Volume-value gap | ❌ All 7 runs | ❌ Still missing | Still unresolved |
+| Duplicate extraction | ✅ Followed Rule 7 | ❌ 3 duplicates | New regression on gpt-4o |
+
+### gpt-4o-mini vs gpt-4o on prompt_v7
+| Metric | Run 7 (gpt-4o-mini) | Run 8 (gpt-4o) |
+|---|---|---|
+| Precision | 75% | 50% |
+| Recall | 75% | 50% |
+| Self-sufficient | 1/4 | 3/4 |
+| VAM-VAE fixed | ❌ | ✅ |
+| Price FP removed | ❌ | ✅ |
+| Duplicates | 0 | 2 |
+| Fabrications | 0 | 0 |
+
+### Root Cause Analysis
+1. VAM-VAE and price increase failures were model-level — both resolved immediately on gpt-4o without any prompt change. Do not switch back to gpt-4o-mini.
+2. Duplicate problem is new on gpt-4o — gpt-4o reads the transcript more thoroughly and finds volume guidance in three separate places. Rule 7 needs to be stronger for gpt-4o's reading behaviour.
+3. Margin guidance still missing — Item 4's passage contains the right location but model extracted volume instead of margin, and did not apply Rule 5 to include analyst question with the 18-20% number.
+4. guidance_value "high single-digit" is a new format failure — prompt needs to clarify that guidance_value must be numeric. Non-numeric descriptions should result in null not text.
+5. Volume-value gap: five consecutive misses across both models. Location is pages 25–26, two separate Q&A exchanges near end of transcript. May need targeted investigation.
+
+### Changes for v8
+- Switch to gpt-4o permanently
+- Rule 7: strengthen deduplication — scan all extracted items before finalising, remove any where metric and timeline match a better existing extraction
+- guidance_value: clarify must be numeric digits only, not text descriptions like "high single-digit" — if no numeric value exists in passage, set to null
+- Rule 5: strengthen Q&A context — when passage starts with a confirmation word, always include the analyst question
+
+---
+
+## Run 9
+**Date:** 08 June 2026
+**Model:** gpt-4o
+**Prompt:** prompt_v8
+**Transcript:** Asian Paints Q4 FY26
+
+### Prompt Changes from v7
+- Condition 1: Added explicit statement that text descriptions like "high single-digit" do not qualify as numbers
+- Rule 7: Added concrete pre-output deduplication step — group by metric + timeline, keep only the passage with explicit digit
+- Rule 5: Added confirmation-word trigger — if passage begins with "Absolutely", "Yes", "Correct" etc., analyst question must be included
+- GUIDANCE_VALUE: Clarified must be numeric digits only, text descriptions set to null
+
+### Raw Numbers
+- Total items extracted: 3
+- False positives: 1 (price increase — past action, reappeared after being absent in Run 8)
+- Duplicates: 0
+- Fabricated passages: 0
+- Valid extractions: 2
+
+### Precision
+- Items matching ground truth correctly: 2 (GT1, GT2)
+- False positives: 1
+- **Strict Precision: 2/3 = 67%** — improvement from Run 8
+
+### Recall
+- GT items found: 2 out of 4
+- **Recall: 2/4 = 50%** — same as Run 8
+- GT3 (PBDIT margin) still not extracted
+- GT4 (volume-value gap) missed for sixth consecutive run
+
+### GT Items Found
+- GT1 (VAM-VAE commissioning, H1 FY27) ✅ — best extraction across all nine runs
+- GT2 (Decorative volume growth 8-10%, FY27) ✅ — clean, single extraction
+
+### GT Items Missed
+- GT3 — PBDIT margin 18-20%, FY27 — number only in analyst question, not in Syngle's response
+- GT4 — Volume-value gap 3-4%, FY27 — sixth consecutive miss
+
+### Issues Per Extracted Item
+
+**Item 1 — VAM-VAE Commissioning**
+Best extraction across all nine runs. Includes "which is our backward integration project" — fully self-sufficient, subject completely unambiguous. All fields correct. Clean GT1 match.
+
+**Item 2 — Price Increase**
+Same false positive. Second appearance on gpt-4o after being absent in Run 8. Oscillation pattern — present in all 7 gpt-4o-mini runs, absent Run 8, present Run 9 — confirms borderline model judgment rather than prompt gap. Deduplication rule reduced total extractions from 4 to 3, and price increase filled the gap. WHAT NOT TO EXTRACT example covers this pattern but not consistently applied.
+
+**Item 3 — Volume Growth**
+GT2 match. Correct metric, guidance_value, credibility_scorable. Deduplication worked — single extraction vs three in Run 8.
+Two remaining issues: (a) passage is Syngle's confirmation of Amit Sachdeva's question which contained "18-20%" — Rule 5 confirmation-word trigger partially worked (model dropped "Absolutely right" from passage start) but analyst question with margin number not included. (b) Margin guidance opportunity at same location missed because 18-20% number only appears in analyst question.
+
+### v8 Fix Effectiveness
+| Fix | Target Failure | Result |
+|---|---|---|
+| guidance_value numeric only | "high single-digit" in Run 8 | ✅ Fixed |
+| Rule 7 deduplication step | 3 volume duplicates in Run 8 | ✅ Fixed |
+| Rule 5 confirmation-word trigger | Analyst Q&A context for margin | ⚠️ Partial — avoided confirmation start but analyst question still excluded |
+
+### Root Cause Analysis
+1. GT3 (margin guidance) persistently missing — 18-20% number appears only in the analyst's question. Syngle confirms it without restating the number. Rule 5 needs a stronger instruction: when management confirms a specific number from an analyst's question, that question is mandatory context and must be included in the passage to satisfy Rule 4.
+2. GT4 (volume-value gap) six consecutive misses — across both models and four prompt versions. Not a simple prompt gap. Requires dedicated investigation of the transcript location and phrasing before designing a fix.
+3. Price increase false positive oscillating — present 7/7 gpt-4o-mini runs, absent Run 8 gpt-4o, present Run 9 gpt-4o. Borderline judgment that prompting has not reliably resolved. Consider accepting this as a known edge case rather than adding more prompt instructions.
+
+### Run Comparison (New Ground Truth Basis — 4 Items)
+| Run | Prompt | Model | Precision | Recall | Items | Self-Sufficient | False Positives | Fabrications |
+|---|---|---|---|---|---|---|---|---|
+| 7 | prompt_v7 | gpt-4o-mini | 75% | 75% | 4 | 1/4 | 1 | 0 |
+| 8 | prompt_v7 | gpt-4o | 50% | 50% | 4 | 3/4 | 0 | 0 |
+| 9 | prompt_v8 | gpt-4o | 67% | 50% | 3 | 2/3 | 1 | 0 |
 
 ---
 
