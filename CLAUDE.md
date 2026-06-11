@@ -78,9 +78,15 @@ Every ground truth item and every LLM output item uses this exact structure:
 ```
 
 credibility_scorable = true only when:
-- Metric is company-level revenue or EBITDA/PBDIT margin
+- Metric is company-level — not segment-level or geography-level
+- Metric is one of: Revenue, EBITDA/PBDIT margin, PAT/Net Profit, PBT, EPS — all available in Screener.in quarterly P&L exports
 - Value is directly matchable against Screener.in quarterly export
-- No segment-level or derived metrics
+
+credibility_scorable = false always for:
+- volume_growth_pct — not in Screener.in P&L
+- capex_absolute — not a P&L line item
+- commissioning_event, volume_value_gap_pct
+- Any segment-level or geography-level metric
 
 Current ground truth file: data/asian_paints_Q4_FY26_ground_truth_v3.txt
 
@@ -90,7 +96,7 @@ Current ground truth file: data/asian_paints_Q4_FY26_ground_truth_v3.txt
 
 | Layer | Choice |
 |---|---|
-| LLM API | OpenAI (gpt-4o-mini for extraction, gpt-4o for scoring) |
+| LLM API | OpenAI (gpt-4o for extraction and scoring — gpt-4o-mini confirmed insufficient for extraction quality) |
 | Backend | FastAPI |
 | Database | PostgreSQL (Docker) + pgvector |
 | ORM | SQLAlchemy |
@@ -108,7 +114,7 @@ Current ground truth file: data/asian_paints_Q4_FY26_ground_truth_v3.txt
 Three phases. Complete each version fully before moving to the next.
 
 ### PHASE 1 — AI Engineering Foundation
-- v1: Extract guidance from one transcript (IN PROGRESS)
+- v1: Extract guidance from one transcript ✓ COMPLETE
 - v2: Structured output + automated eval + PostgreSQL
 - v3: Multi-transcript RAG + semantic search
 
@@ -125,15 +131,25 @@ Three phases. Complete each version fully before moving to the next.
 
 ## Current Status
 
-Phase 1, v1 — Prompt iteration in progress
+Phase 1, v1 — COMPLETE. Moving to v2.
 
-- Prompt versions completed: v1, v2, v3, v4
-- Best recall: 55% (prompt_v3)
-- Best precision: 100% (prompt_v4)
-- Best self-sufficiency: 5/8 passages (prompt_v4)
-- Ground truth: v3 finalised (4 items, Asian Paints Q4 FY26) — structure locked
-- Next action: Iterate prompt v5 targeting recall ≥ 70%
-- Target to complete v1: Recall ≥ 70%, Precision ≥ 80%, all passages self-sufficient
+**v1 Outcome:**
+- Prompt versions completed: v1 through v8 (9 runs total)
+- Best production prompt: prompt_v8 on gpt-4o
+- Final recall: 75% on Asian Paints Q4 FY26 (3/4 GT items)
+- Final precision: 67% (2 clean GT matches, 1 persistent false positive)
+- Self-sufficiency: 2/3 passages fully clean
+- Ground truth: v3 locked — 4 items, Asian Paints Q4 FY26
+- Model decision: gpt-4o confirmed for extraction — gpt-4o-mini insufficient
+- Known limitations carried forward: price increase false positive oscillates, GT4 (volume-value gap) consistently missed — both accepted as edge cases
+
+**v2 Next — Structured output + automated eval + PostgreSQL:**
+- Define Pydantic schema matching ground truth structure
+- Force structured JSON output from LLM using OpenAI response_format
+- Build automated eval script: precision and recall computed programmatically
+- Save extracted records to PostgreSQL
+- Track prompt versions with scores in eval log automatically
+- Done when: extraction runs on 3 transcripts, records in PostgreSQL, eval script prints scores automatically
 
 Update this section at the start of every session.
 
@@ -153,10 +169,7 @@ concall-intelligence/
 ├── eval_log.md                ← prompt iteration tracking
 ├── main.py
 ├── prompts/                   ← one file per prompt version
-│   ├── prompt_v1.txt
-│   ├── prompt_v2.txt
-│   ├── prompt_v3.txt
-│   └── prompt_v4.txt
+│   ├── prompt_v1.txt through prompt_v8.txt (v8 is current best)
 ├── notes.md                   ← decisions and future implementation notes
 ├── data/                      ← ground truth and eval sets
 │   ├── asian_paints_Q4_FY26_ground_truth_v3.txt

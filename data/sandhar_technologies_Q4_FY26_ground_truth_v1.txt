@@ -1,0 +1,114 @@
+Extracted Guidance Statements — Sandhar Technologies Q4 FY26
+
+id: 1
+guidance: Consolidated revenue growth over 15% FY27
+passage: "This particular year will be another very interesting year, and despite all the problems in the polycrisis that I spoke about, I do expect that even on a conservative level, I am happy to give a guidance of over a 15% growth in the overall revenue. This is without taking a price retrigger, which is likely to happen, especially with a lot of costs having gone up, a lot of states announcing new power costs, which has also been a challenge in the last few months."
+speaker: Jayant Davar (Executive Chairman and CEO)
+page_number: 4
+metric: revenue_growth_pct
+guidance_value: "15"
+guidance_unit: "%"
+timeline: FY27
+credibility_scorable: true
+
+id: 2
+guidance: EBITDA margin improvement delta 0.25pp FY27 (existing projects only)
+passage: "So, what I was saying is that yes, we also have a desire and expectations to improve our EBITDA margins by 0.25% for our existing projects, but in case of new projects, more new projects would be coming up in the current financial year, which would again have a profitability turnaround period of another 1.5 years to 2 years' time."
+speaker: Yashpal Jain (Chief Financial Officer and Company Secretary)
+page_number: 9
+metric: other_ebitda_margin_delta
+guidance_value: "0.25"
+guidance_unit: "%"
+timeline: FY27
+credibility_scorable: false
+
+id: 3
+guidance: Capex of INR 275–310 crore FY27
+passage: "And in the earlier calls, our Chairman has mentioned that we keep our CapEx limited to 5% to 7% of our revenues. So, taking our 15% growth on the current year's revenue, which is roughly INR 5,500 crores, you can expect somehow capital outlay of INR 275 crores to around INR 310 crores for the upcoming financial year, which will include a part of growth CapEx, part of maintenance CapEx, part of upgradation CapEx required to upgrade our some old facilities also."
+speaker: Yashpal Jain (Chief Financial Officer and Company Secretary)
+page_number: 8
+metric: capex_absolute
+guidance_value: "275-310"
+guidance_unit: "crore"
+timeline: FY27
+credibility_scorable: false
+
+id: 4
+guidance: EV business revenue to double to INR 40 crore FY27
+passage: "In terms of EV, the business finally is on track. I am happy to share that the EV business is gradually picking up and close this year with a revenue of INR 20 crores. We are expecting now to double this revenue in the current financial year."
+speaker: Jayant Davar (Executive Chairman and CEO)
+page_number: 4
+metric: other_ev_revenue_absolute
+guidance_value: "40"
+guidance_unit: "crore"
+timeline: FY27
+credibility_scorable: false
+
+id: 5
+guidance: New projects revenue to reach ~INR 700–750 crore FY27
+passage: "Ashutosh Tiwari: So, this INR 468 crore revenue that you did in this year can go to INR 800 crore plus in FY '27? Yashpal Jain: 2.5% you can say INR 700 crores, INR 750 crores something. I mean, it is a range sir has given. 2.5x, which can be 2x to 2.5x basically, I would say. So, around INR 750 crores of revenue these projects can do. 468 they have already delivered."
+speaker: Yashpal Jain (Chief Financial Officer and Company Secretary)
+page_number: 10
+metric: other_new_projects_revenue_absolute
+guidance_value: "700-750"
+guidance_unit: "crore"
+timeline: FY27
+credibility_scorable: false
+
+id: 6
+guidance: Khed City aluminium die-casting project reaches EBT-positive from Q2 FY27
+passage: "There is another project in Khed City for aluminum die-casting, which is focused on passenger vehicle segment. From Quarter 2 onwards, it will start generating EBT level margins. So, this is a turnaround time for this project."
+speaker: Yashpal Jain (Chief Financial Officer and Company Secretary)
+page_number: 6
+metric: other_ebt_breakeven
+guidance_value: null
+guidance_unit: null
+timeline: Q2 FY27
+credibility_scorable: false
+
+id: 7
+guidance: Sundaram-Clayton die-casting unit EBT turnaround from Q3 FY27
+passage: "So, as we have mentioned on page 7 also of our investor presentation, one of the loss-making units is Sundaram-Clayton's business that we have acquired in March 25. The shifting is in progress and I think by the end of Quarter 2, we would be able to shift the entire business to our own premises. I think from Quarter 3 onwards, we will start a turnaround in the units with our new EBT levels. But on a yearly basis, '26-'27, we expect to continue with EBT level losses in this die-casting business that we acquired from Sundaram-Clayton."
+speaker: Yashpal Jain (Chief Financial Officer and Company Secretary)
+page_number: 6
+metric: other_ebt_breakeven
+guidance_value: null
+guidance_unit: null
+timeline: Q3 FY27
+credibility_scorable: false
+
+id: 8
+guidance: Pune (Sanaswadi) cabins and fabrication unit EBT turnaround from end Q2 FY27
+passage: "There is another project in Pune, cabins and fabrication. That also we expect to start turnaround from the end of Quarter 2 of this current financial year."
+speaker: Yashpal Jain (Chief Financial Officer and Company Secretary)
+page_number: 6
+metric: other_ebt_breakeven
+guidance_value: null
+guidance_unit: null
+timeline: Q2 FY27
+credibility_scorable: false
+
+---
+
+Notes
+
+1. Borderline items considered and excluded
+- Double revenues every 3–4 years (pg 4, 11) — long-term aspiration, not verifiable within 4 quarters. Excluded.
+- INR 10,000 cr revenue → ~INR 450 cr PAT, 18–20% post-tax ROCE (pg 12–13) — tied to the 3–4 year doubling; outside the window. Excluded.
+- EV business profitability in FY28; Romania breakeven in FY28 (pg 6, 11) — genuine commitment events but ~5–8 quarters out. Excluded.
+- "EBITDA levels will remain constant around 11%" (pg 12) — steady-state comment in a long-term context, no near-term trackable change. Excluded.
+- Term-loan repayment of ~INR 103 cr in FY27 (pg 13) — contractual repayment schedule, not performance guidance. Excluded.
+- Telematics/technology transfer "to the market within the next 12 months" (pg 14) — conditional, no number. Excluded.
+
+2. Numbers originating in the analyst's question
+- id:5: the INR 800 cr figure came from Ashutosh Tiwari's question; management corrected it to ~INR 700–750 cr. The INR 468 cr base and INR 750 cr target are management's own numbers.
+
+3. Timeline derivations
+- Call is Q4 FY26, dated 25 May 2026. "This / current / upcoming financial year" = FY27. "Quarter 2 / Quarter 3" = Q2 / Q3 FY27.
+
+4. Metric clarifications
+- id:2: guidance_value "0.25" is a delta (improvement of 0.25 percentage points), not an absolute EBITDA margin target. Applied per the delta edge-case rule in the extraction prompt.
+- id:2: credibility_scorable is false because the 0.25pp target applies to existing projects only; Screener.in shows consolidated OPM%, which will include new-project drag, making the guided delta not directly matchable.
+- id:6, id:7, id:8: These are profitability milestone events (existing projects reaching EBT breakeven), not new plant commissioning events. metric changed from commissioning_event to other_ebt_breakeven.
+- id:7 nuance: management guides EBT turnaround from Q3 FY27 but expects full-year FY27 to still show EBT-level losses for this unit. The tracked outcome is onset of turnaround, not full-year profitability.
+- id:5 value inconsistency: "2.5x of INR 342 cr investment" implies ~INR 855 cr but management's stated rupee figure is "around INR 750 crores" (described as 2x–2.5x of the INR 468 cr revenue base). Used the explicit rupee figure. Verify before locking.

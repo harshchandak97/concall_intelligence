@@ -1,0 +1,23 @@
+id: 1
+guidance: Blended consolidated EBITDA margin 18–20% in FY27
+passage: "Vinay Nadkarni: Great. I think it's a great acquisition. Just one last question for you. When you said 18% to 20% of blended EBITDA going forward, would that be in F '27 or would you look at that as F '28?
+Sanjay Tibrewala: We are trying our best to make it as soon as – as quickly as possible, but I think this can be reflecting even in this financial year. So, I won't be surprised rather on that."
+speaker: Sanjay Tibrewala (Chief Financial Officer)
+page_number: 14
+metric: ebitda_margin_pct
+guidance_value: 18-20
+guidance_unit: %
+timeline: FY27
+credibility_scorable: true
+
+id: 2
+guidance: CCT (CrudeChem) to reach $200 million revenue by 2028
+passage: "Darshil Jhaveri: Yes. Hi, sir. So, sir, just wanted to understand with the $200 million target that we have from CCT business itself, what is the revenue guidance that we could give for FY '27 and FY '28?
+Sanjay Tibrewala: … So we also revised, we were planning $200 million business in 2030, which is now revised to 2028 because also a lot of our technology transfers have also been done from Fineotex, a lot of products are going to be produced and already being produced in US where the market is."
+speaker: Sanjay Tibrewala (Chief Financial Officer)
+page_number: 8
+metric: other_revenue_usd_subsidiary
+guidance_value: 200
+guidance_unit: $ million
+timeline: FY28
+credibility_scorable: false

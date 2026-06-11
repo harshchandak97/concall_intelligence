@@ -699,3 +699,48 @@ Two remaining issues: (a) passage is Syngle's confirmation of Amit Sachdeva's qu
 7. **One change at a time is ideal — but related fixes can be batched.** Recall fixes and context fixes were batched in v4 because they address the same root cause.
 
 8. **Prompts must be generic.** Company-specific instructions (mentioning industrial coatings, backward integration by name) break the prompt for other companies. Always abstract to the general case.
+
+9. **gpt-4o-mini is insufficient for production extraction.** Persistent failures (VAM-VAE self-sufficiency, price increase false positive) resolved immediately on gpt-4o without any prompt change. gpt-4o confirmed as production model.
+
+---
+
+## v1 — COMPLETE
+
+**Final state:** prompt_v8 on gpt-4o. Recall 75% (3/4 GT items), Precision 67% (2 clean GT matches + 1 persistent false positive). Two known edge cases carried forward: price increase false positive oscillates, GT4 (volume-value gap) consistently missed across all 9 runs on both models. Both accepted — Asian Paints is outside target universe anyway.
+
+**Ground truth:** v3 locked — 4 items, Asian Paints Q4 FY26.
+
+**Test companies for v2+:** Fineotex Chemical, Sandhar Technologies, Mold-Tek Packaging. All ₹500cr–10,000cr market cap, single-segment businesses. Asian Paints retained for eval pipeline validation only.
+
+---
+
+## v2 — Structured Output + Automated Eval
+
+**Changes from v1:**
+- `schemas.py` created — three Pydantic models: `GuidanceItem` (8 fields), `ExtractionResult` (OpenAI structured output wrapper), `GuidanceRecord` (extends GuidanceItem with company, quarter, prompt_version, run_id, extracted_at for PostgreSQL)
+- `main.py` updated — switched from `client.chat.completions.create()` to `client.beta.chat.completions.parse()` with `response_format=ExtractionResult`
+- `prompt_v8.txt` OUTPUT FORMAT section updated — describes `items` wrapper to align with schema
+- `eval.py` created — automated precision/recall script with fuzzy guidance_value matching (±10% of midpoint), exact metric and timeline matching, per-item coverage output
+
+---
+
+## v2 Validation Runs — Structured Output on Asian Paints
+**Date:** 09 June 2026
+**Model:** gpt-4o
+**Prompt:** prompt_v8 (structured output mode)
+**Transcript:** Asian Paints Q4 FY26
+**Purpose:** Validate structured output pipeline before moving to new test companies
+
+| Run | Items returned | Recall | Precision | Notes |
+|---|---|---|---|---|
+| v2-Run1 | 2 | 25.0% | 50.0% | volume_growth_pct missing, price_increase_pct FP |
+| v2-Run2 | 2 | 25.0% | 50.0% | Same result |
+| v2-Run3 | 3 | 50.0% | 66.7% | volume_growth_pct found, ebitda_margin_pct still missing |
+
+**Diagnosis:** Run variation from structured output non-determinism, not a prompt bug. `ebitda_margin_pct` consistently missing across all three runs — regression from v1's 75%. `volume_growth_pct` oscillates in and out.
+
+**Decision:** Do not fix prompt on Asian Paints. Asian Paints dropped as primary test case — large cap, multi-segment, outside target universe. Regression noted but not actioned here.
+
+**Next:** Build ground truth for Fineotex Chemical, Sandhar Technologies, Mold-Tek Packaging. Run eval on those. Fix prompt only if regression appears on target companies.
+
+**v2 Step 4 next:** PostgreSQL schema + storage.

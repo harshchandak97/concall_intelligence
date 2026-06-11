@@ -37,7 +37,7 @@ guidance: PBDIT Margin Band — FY27
 passage: "Amit Sachdeva: Just to understand clearly that in doing so, you would like to maintain your margin guidance, which has always been 18-20%, there is a high single-digit volume ambition as well for the year. I assume when you say high single-digit, you mean FY27. And also the pricing whatever will build up on top of it. Is this a way to interpret what you are saying? Amit Syngle: Absolutely right. We are maintaining our margin guidance, which is there. We are looking at the price increases that are happening and trying to see that we get into that area of 8-10% volume growth."        
 speaker: Amit Syngle (MD & CEO), confirming analyst's statement
 page_number: 22
-metric: pbdit_margin_pct
+metric: ebitda_margin_pct
 guidance_value: 18-20
 guidance_unit: %
 timeline: FY27

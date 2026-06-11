@@ -1,0 +1,109 @@
+id: 1
+guidance: Pharma segment revenue target FY27
+passage: "Samarth Jain: So you gave us the guidance of INR55 crores to INR60 crores in Pharma for FY '27. So is this including this contract revenue or will it be incremental to this? J. Lakshmana Rao: No, INR55 crores is our target for the next financial year '26-'27. We hit almost INR34.4 crores for the current financial year. So we have taken a 50% growth to reach somewhere around close to between INR50 crores and INR55 crores for the Pharma. We are online with that, I hope."
+speaker: J. Lakshmana Rao (Chairman and Managing Director)
+page_number: 3
+metric: other_pharma_revenue_absolute
+guidance_value: "50-55"
+guidance_unit: "crore"
+timeline: FY27
+credibility_scorable: false
+
+id: 2
+guidance: Capex budget FY27
+passage: "J. Lakshmana Rao: So these 3 areas, but we have a sharp lesser budget of capital investment in this current financial year, which was INR140 crores 2 years ago for 2 consecutive years and [120 years 0:11:33] in this financial year '25-'26. And we hope to control this capex to INR80 crores, INR85 crores in the next year, that is '26-'27 as we will be going only for brownfield expansions now onwards."
+speaker: J. Lakshmana Rao (Chairman and Managing Director)
+page_number: 4
+metric: capex_absolute
+guidance_value: "80-85"
+guidance_unit: "crore"
+timeline: FY27
+credibility_scorable: false
+
+id: 3
+guidance: Total capacity by end FY27
+passage: "Chirag: And that will lead to almost like 70,000 MTPA capacity by the end of FY '27. Is my assumption correct? J. Lakshmana Rao: Yes, I think we should be close to 68, 67 because capacity-wise in Pharma, the number of tons won't be too many... So by end of this financial year, that is '26-'27, probably we will be somewhere around 67,000, 68,000, maybe close to 70,000 tons."
+speaker: J. Lakshmana Rao (Chairman and Managing Director)
+page_number: 5
+metric: capacity_addition
+guidance_value: "67000-68000"
+guidance_unit: "tons"
+timeline: FY27
+credibility_scorable: false
+
+id: 4
+guidance: Company revenue to cross INR1,000 crore FY27
+passage: "J. Lakshmana Rao: But in terms of value, I'm sure we'll be clocking between 13% to 15% value growth, like what we did this year, 13.3%. We hope that we will be somewhere between 13% to 15% in the value growth in the next financial year. That is why I said in the year '26-'27, we may cross the INR1,000 crores mark sales."
+speaker: J. Lakshmana Rao (Chairman and Managing Director)
+page_number: 10
+metric: revenue_absolute
+guidance_value: "1000"
+guidance_unit: "crore"
+timeline: FY27
+credibility_scorable: true
+
+id: 5
+guidance: Company value (revenue) growth FY27
+passage: "J. Lakshmana Rao: But in terms of value, I'm sure we'll be clocking between 13% to 15% value growth, like what we did this year, 13.3%. We hope that we will be somewhere between 13% to 15% in the value growth in the next financial year. That is why I said in the year '26-'27, we may cross the INR1,000 crores mark sales."
+speaker: J. Lakshmana Rao (Chairman and Managing Director)
+page_number: 10
+metric: revenue_growth_pct
+guidance_value: "13-15"
+guidance_unit: "%"
+timeline: FY27
+credibility_scorable: true
+
+id: 6
+guidance: Company volume growth FY27
+passage: "Akhil Parekh: Sir, and just reconfirm your growth guidance for '27, you suggested 10% to 15% volume growth and 13% to 15% value growth. Did I hear correctly? J. Lakshmana Rao: Yes. The volume growth is 10% to 13% because Pharma won't add volumes. It will hardly be in few tons... So volume-wise increment might look 10% to 13%, but value-wise increment, we are aiming at 13% to 15%."
+speaker: J. Lakshmana Rao (Chairman and Managing Director)
+page_number: 13
+metric: volume_growth_pct
+guidance_value: "10-13"
+guidance_unit: "%"
+timeline: FY27
+credibility_scorable: false
+
+id: 7
+guidance: EBITDA per kg target FY27
+passage: "Akhil Parekh: My first question on the EBITDA per kg, right? We have shown good improvement. What should that number look like, say, in FY '27 and '28? J. Lakshmana Rao: FY '27, as I expected, we are aiming at, at least 42 to 43, 42.5 could be a good estimate for the full year."
+speaker: J. Lakshmana Rao (Chairman and Managing Director)
+page_number: 12
+metric: other_ebitda_per_kg
+guidance_value: "42-43"
+guidance_unit: "₹/kg"
+timeline: FY27
+credibility_scorable: false
+
+id: 8
+guidance: Absolute EBITDA target FY27
+passage: "Shanskar: Just wanted to get that you have guided going forward on maintaining around 20% growth rate in terms of profitability at EBITDA and PAT level. So are you maintaining that or is there any upside or downward revision? J. Lakshmana Rao: I think we'll certainly be there. We are aiming at, at least INR210 crores EBITDA for next financial year, up from INR173, that's 20% price [growth]. I think we are definitely going to achieve that..."
+speaker: J. Lakshmana Rao (Chairman and Managing Director)
+page_number: 17
+metric: other_ebitda_absolute
+guidance_value: "210"
+guidance_unit: "crore"
+timeline: FY27
+credibility_scorable: false
+
+id: 9
+guidance: ROCE target FY27
+passage: "J. Lakshmana Rao: Coming back to ROCE, yes, the ROCE has leaped by about 14% from 10.2% to 12.4% and probably it may hit around 13.5% to 14% in the next financial year."
+speaker: J. Lakshmana Rao (Chairman and Managing Director)
+page_number: 16
+metric: other_roce_pct
+guidance_value: "13.5-14"
+guidance_unit: "%"
+timeline: FY27
+credibility_scorable: false
+
+id: 10
+guidance: Food and FMCG segment growth FY27
+passage: "J. Lakshmana Rao: So Food and FMCG from -- if you see only thin wall, it is 15.4%. If you combine the thick wall also, food is around 18%. But this 15.4%, I'm sure it will be looking at least 20% growth in the food and FMCG, including the North numbers for the next financial year."
+speaker: J. Lakshmana Rao (Chairman and Managing Director)
+page_number: 12
+metric: other_food_fmcg_revenue_growth_pct
+guidance_value: "20"
+guidance_unit: "%"
+timeline: FY27
+credibility_scorable: false

@@ -112,20 +112,22 @@ Extract from all parts equally — management opening remarks, financial results
 
 OUTPUT FORMAT
 
-Output a JSON array. Each extracted item must follow this exact structure:
+Return a JSON object with a single key "items" containing an array of extracted guidance statements. Each item in the array must follow this exact structure:
 
-[
-  {
-    "passage": "exact verbatim text from transcript",
-    "speaker": "Name and title of the person who made the statement",
-    "page_number": <integer>,
-    "metric": "<metric type from controlled vocabulary below>",
-    "guidance_value": "<numeric digits or range e.g. '18-20' or '8-10', null if not applicable>",
-    "guidance_unit": "<unit of measurement e.g. '%' or 'crore', null if not applicable>",
-    "timeline": "<specific period e.g. 'H1 FY27' or 'FY27', clean value only>",
-    "credibility_scorable": <true or false>
-  }
-]
+{
+  "items": [
+    {
+      "passage": "exact verbatim text from transcript",
+      "speaker": "Name and title of the person who made the statement",
+      "page_number": <integer>,
+      "metric": "<metric type from controlled vocabulary below>",
+      "guidance_value": "<numeric digits or range e.g. '18-20' or '8-10', null if not applicable>",
+      "guidance_unit": "<unit of measurement e.g. '%' or 'crore', null if not applicable>",
+      "timeline": "<specific period e.g. 'H1 FY27' or 'FY27', clean value only>",
+      "credibility_scorable": <true or false>
+    }
+  ]
+}
 
 ---
 
