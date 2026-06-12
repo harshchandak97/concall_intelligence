@@ -743,4 +743,106 @@ Two remaining issues: (a) passage is Syngle's confirmation of Amit Sachdeva's qu
 
 **Next:** Build ground truth for Fineotex Chemical, Sandhar Technologies, Mold-Tek Packaging. Run eval on those. Fix prompt only if regression appears on target companies.
 
-**v2 Step 4 next:** PostgreSQL schema + storage.
+---
+
+## v2 Baseline Runs — Target Companies on prompt_v8
+**Date:** 12 June 2026
+**Model:** gpt-4o
+**Prompt:** prompt_v8
+**Transcripts:** Fineotex Chemical Q4 FY26, Sandhar Technologies Q4 FY26, Mold-Tek Packaging Q4 FY26
+**Purpose:** Establish baseline on the three primary test companies before prompt iteration
+
+| Company | GT Items | LLM Items | Recall | Precision | Notes |
+|---|---|---|---|---|---|
+| Fineotex Chemical | 2 | 3 | 1/2 = 50.0% | 1/3 = 33.3% | GT2 missed — metric label wrong |
+| Sandhar Technologies | 8 | 3 | 1/8 = 12.5% | 1/3 = 33.3% | Under-extraction, 2 null-value FPs |
+| Mold-Tek Packaging | 10 | 7 | 2/10 = 20.0% | 2/7 = 28.6% | Unit scale error on capacity, 5 FPs |
+
+### Per-Company Analysis
+
+**Fineotex Chemical (50% recall, 33.3% precision)**
+- GT1 (ebitda_margin_pct | 18-20 | FY27) ✅ — clean match
+- GT2 (other_revenue_usd_subsidiary | 200 | FY28) ✗ — LLM found the right passage and value but labelled it `revenue_absolute` instead of `other_revenue_usd_subsidiary`. Underlying content found, metric misclassified. Counts as FP not TP.
+- FP1: `capacity_addition | null | FY27` — null guidance_value extracted, no number in passage, should not have been extracted
+- FP2: `revenue_absolute | 200 | FY28` — correct content, wrong metric label (see GT2)
+
+**Sandhar Technologies (12.5% recall, 33.3% precision)**
+- GT1 (revenue_growth_pct | 15 | FY27) ✅ — clean match
+- GT2–GT8 all missed — LLM returned only 3 items total against 8 GT items, severe under-extraction
+- FP1: `revenue_absolute | null | FY27` — null value, fails Condition 1
+- FP2: `commissioning_event | null | H1 FY27` — may be valid content but not matched to GT
+
+**Mold-Tek Packaging (20% recall, 28.6% precision)**
+- GT1 (capex_absolute | 80-85 | FY27) ✅
+- GT5 (revenue_growth_pct | 13-15 | FY27) ✅
+- GT3 (capacity_addition | 67000-68000 | FY27) ✗ — LLM extracted `capacity_addition | 67-70` — unit scale error (thousands vs raw)
+- GT4 (revenue_absolute | 1000 | FY27) ✗ — LLM extracted it as `revenue_absolute | 50-55` — wrong value
+- 5 false positives including `commissioning_event | null` and `ebitda_margin_pct | 42-43` instead of `other_ebitda_per_kg | 42-43`
+
+### Failure Pattern Summary (prompt_v8 on target companies)
+1. **Under-extraction** — LLM returns 3 items on 8-item transcripts. Prompt was tuned on 4-item Asian Paints GT, not designed for richer transcripts.
+2. **Metric misclassification** — LLM finds the right passage but assigns wrong label. Segment/subsidiary/per-unit metrics mapped to standard vocabulary instead of `other_` prefix.
+3. **Null-value FPs** — `guidance_value: null` extracted for non-event metrics despite Condition 1 requiring a number.
+4. **Unit scale errors** — capacity values extracted in wrong unit of magnitude.
+
+---
+
+## v2 Prompt Iteration — prompt_v9
+**Date:** 12 June 2026
+**Model:** gpt-4o
+**Prompt:** prompt_v9
+**Changes from v8:**
+1. Opening paragraph: added "A single transcript typically contains 5 to 15 qualifying statements — extract all of them without stopping early" — intended to fix under-extraction
+2. guidance_value rules: changed "Set to null for commissioning events or any guidance with no numeric target" to "Set to null for commissioning_event and binary event metrics only. For all other metrics, if no specific number exists in the passage, do not extract the item at all — it fails Condition 1" — intended to fix null-value FPs
+3. Metric vocabulary: added note that segment/subsidiary/per-unit metrics must always use `other_` prefix — intended to fix metric misclassification
+
+| Company | GT Items | LLM Items | Recall | Precision | Notes |
+|---|---|---|---|---|---|
+| Fineotex Chemical | 2 | 10 | 1/2 = 50.0% | 1/10 = 10.0% | Precision collapsed |
+| Sandhar Technologies | 8 | 7 | 1/8 = 12.5% | 1/7 = 14.3% | Recall unchanged, precision dropped |
+| Mold-Tek Packaging | 10 | — | — | — | Hit 16,384 output token limit — response truncated, pipeline error |
+
+### v8 vs v9 Comparison
+
+| Company | v8 Recall | v9 Recall | v8 Precision | v9 Precision | v8 Items | v9 Items |
+|---|---|---|---|---|---|---|
+| Fineotex | 50% | 50% | 33.3% | 10.0% | 3 | 10 |
+| Sandhar | 12.5% | 12.5% | 33.3% | 14.3% | 3 | 7 |
+| Mold-Tek | 20% | — | 28.6% | — | 7 | token limit |
+
+### Why v9 Made Things Worse
+
+**Fix 1 backfired (under-extraction):** "5 to 15 qualifying statements" was interpreted by the LLM as a quota to reach, not a floor. Fineotex went from 3 to 10 items — 9 of which were false positives. The LLM lowered its quality bar to hit the count. Recall stayed identical — the right items were already being found. Only noise was added.
+
+**Fix 2 had no effect (null-value FPs):** The null-value rule is at the bottom of the prompt in the guidance_value section. By the time the LLM reads it, candidate items have already been decided. Fineotex v9 still has `capacity_addition | null` extracted twice plus new null-value FPs (`other_expansion_strategy | null`, `other_industry_trend | null`). The rule needs to be enforced at the candidate selection stage, not at field-filling time.
+
+**Fix 3 had no effect (metric vocabulary):** `revenue_absolute | 200` still extracted instead of `other_revenue_usd_subsidiary | 200` on Fineotex. The example given (EBITDA per kg) did not match the actual failure pattern (subsidiary revenue). On Sandhar, four of six FPs are correct content with wrong metric label — the same misclassification problem from v8.
+
+**New observations on Sandhar v9:**
+- `revenue_absolute | 40` extracted twice in the same run — Rule 7 deduplication not working
+- `ebitda_margin_pct | 0.25` extracted instead of `other_ebitda_margin_delta | 0.25` — delta vs absolute confusion
+- `revenue_absolute | 750` extracted instead of `other_new_projects_revenue_absolute | 700-750` — wrong label and wrong value range
+
+**Mold-Tek token limit:** With the v9 instruction to extract more items, Mold-Tek's output overflowed the 16,384 completion token limit (16,384 completion tokens used, response truncated). This is a hard pipeline failure — Mold-Tek is not runnable with the single-pass approach at current output verbosity.
+
+### v9 Learnings
+1. Never include a numeric extraction target in the prompt — LLMs treat ranges as quotas
+2. Rules placed at the bottom of a long prompt are not reliably applied to candidate selection
+3. Metric vocabulary fix requires concrete examples matching the actual failure pattern, not a generic note
+4. The single-pass approach has a hard ceiling — Mold-Tek proves output token limits are a real constraint at 10+ GT items
+
+---
+
+## Architecture Decision — Moving to Multi-Pass Pipeline
+
+**Date:** 12 June 2026
+
+Single-pass extraction is not the right architecture for this problem. The core issue is task overload: the LLM is simultaneously attending to 50,000+ characters, identifying candidates, applying extraction rules, classifying metrics, and filling 8 structured fields per item — all in one shot. Each step has error, and the errors compound.
+
+**Decision:** Move to a two-pass pipeline:
+- Pass 1 (candidate extraction): Identify all passages that might contain forward-looking guidance — loose filter, high recall, free text output, cheap model acceptable
+- Pass 2 (classification): For each candidate passage, classify metric, extract fields, apply structured schema — focused task, one passage at a time, gpt-4o
+
+This directly addresses the root causes of metric misclassification (now a focused single-passage task), null-value FPs (Pass 2 can enforce Condition 1 per item), and token limit issues (output size is bounded per candidate not per transcript).
+
+**Implementation:** v2 pipeline change in `main.py`. Same schemas, same eval, same database. No version bump required — this is a pipeline architecture change within v2 scope.
