@@ -17,3 +17,4 @@ data/downloads/
 dist/
 build/
 *.egg-info/
+debug_output/
