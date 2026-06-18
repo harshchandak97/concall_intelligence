@@ -2,28 +2,27 @@
 dump_stage0.py — Manual review dump for Stage 0 output
 
 For each target transcript, writes a markdown file showing:
-  - Management roster extracted from the participant list (or fallback note)
-  - Speaker -> role -> turn count summary, from raw turns before Q&A pairing
-  - Every final chunk: chunk_id, speaker, role, pages, is_qa_pair, word count,
-    and full text
+  - Every final chunk: chunk_id, chunk_type, speaker, analyst_speaker,
+    pages, word count, turn count, and full text
+  - Summary table at the top: speaker, role, turn count per chunk_type
 
 This is a read-only debug aid — it doesn't affect the pipeline or eval scripts.
 
-Output: debug_output/{company_slug}_stage0_dump.md  (one file per company)
+Output: scripts/debug_output/{slug}_stage0_dump.md  (one file per company)
 
-Run: python dump_stage0.py
+Run from project root: python scripts/dump_stage0.py
 """
 
+import sys
+from collections import Counter
 from pathlib import Path
-from collections import Counter, OrderedDict
 
-from pipeline.stage0_segmenter import (
-    extract_pages_from_pdf,
-    segment,
-    _extract_management_roster,
-    _split_into_turns,
-    _classify_roles,
-)
+# Add project root so pipeline imports work from scripts/
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from pipeline.models import ChunkType
+from pipeline.stage0_segmenter import segment
+
 
 COMPANIES = [
     {
@@ -41,71 +40,69 @@ COMPANIES = [
         "slug": "mold-tek_packaging",
         "pdf": "transcripts/mold-tek_packaging_Q4_FY26.pdf",
     },
+    {
+        "name": "Asian Paints Limited",
+        "slug": "asian_paints",
+        "pdf": "transcripts/asian_paints_Q4_FY26.pdf",
+    }
 ]
 
-OUTPUT_DIR = Path("debug_output")
+OUTPUT_DIR = Path(__file__).parent / "debug_output"
 
 
 def dump_company(company: dict) -> None:
-    pages = extract_pages_from_pdf(company["pdf"])
-    full_text = "".join(pages.values())
+    pdf_path = company["pdf"]
+    if not Path(pdf_path).exists():
+        print(f"{company['name']}: SKIPPED (PDF not found: {pdf_path})")
+        return
 
-    # --- Management roster (from participant-list header) ------------------
-    roster = _extract_management_roster(full_text)
+    chunks = segment(pdf_path)
 
-    # --- Raw turns + role classification (before Q&A pairing) --------------
-    raw_turns = _split_into_turns(full_text)
-    turns_with_roles = _classify_roles(raw_turns, roster)
-
-    speaker_roles: "OrderedDict[str, str]" = OrderedDict()
-    speaker_counts: Counter = Counter()
-    for speaker, _text, _cs, _ce, role in turns_with_roles:
-        speaker_roles[speaker] = role.value
-        speaker_counts[speaker] += 1
-
-    # --- Final chunks (Stage 0 output) --------------------------------------
-    chunks = segment(full_text, pages)
-    qa_count = sum(1 for c in chunks if c.is_qa_pair)
+    type_counts = Counter(c.chunk_type.value for c in chunks)
+    qa_count = type_counts[ChunkType.QA_SESSION.value]
+    opening_count = type_counts[ChunkType.OPENING_REMARKS.value]
+    solo_count = type_counts[ChunkType.MANAGEMENT_SOLO.value]
 
     lines: list[str] = []
     lines.append(f"# Stage 0 Dump — {company['name']}\n")
 
-    # Roster section
-    lines.append("## Management roster (from participant list)\n")
-    if roster:
-        for name in sorted(roster):
-            lines.append(f"- {name}")
-    else:
+    # Summary
+    lines.append("## Summary\n")
+    lines.append(f"- Total chunks      : {len(chunks)}")
+    lines.append(f"- opening_remarks   : {opening_count}")
+    lines.append(f"- qa_session        : {qa_count}")
+    lines.append(f"- management_solo   : {solo_count}")
+    lines.append("")
+
+    # Chunk index table
+    lines.append("## Chunk index\n")
+    lines.append("| chunk_id | type | speaker | analyst | pages | words | turns |")
+    lines.append("|---|---|---|---|---|---|---|")
+    for c in chunks:
+        pages = f"{c.page_start}–{c.page_end}" if c.page_start != c.page_end else str(c.page_start)
+        analyst = c.analyst_speaker or "—"
         lines.append(
-            "_No participant-list roster found — fallback heuristic used "
-            "(first 4 non-moderator speakers from raw turns)._"
+            f"| {c.chunk_id} | {c.chunk_type.value} | {c.speaker} "
+            f"| {analyst} | {pages} | {c.word_count} | {len(c.turns)} |"
         )
     lines.append("")
 
-    # Speaker summary section
-    lines.append("## Speaker summary (raw turns, before Q&A pairing)\n")
-    lines.append(f"Total raw turns: {len(raw_turns)}\n")
-    lines.append("| Speaker | Role | Turn count |")
-    lines.append("|---|---|---|")
-    for speaker, role in speaker_roles.items():
-        lines.append(f"| {speaker} | {role} | {speaker_counts[speaker]} |")
-    lines.append("")
-
-    # Chunks section
-    lines.append(
-        f"## Chunks — {len(chunks)} total "
-        f"({qa_count} Q&A pairs, {len(chunks) - qa_count} solo management)\n"
-    )
-
+    # Full chunk text
+    lines.append("## Chunks\n")
     for c in chunks:
-        wc = len(c.text.split())
+        pages = f"{c.page_start}–{c.page_end}" if c.page_start != c.page_end else str(c.page_start)
         lines.append("---\n")
-        lines.append(f"### {c.chunk_id}")
-        lines.append(f"- Speaker: {c.speaker}")
-        lines.append(f"- Role: {c.role.value}")
-        lines.append(f"- Pages: {c.page_start}-{c.page_end}")
-        lines.append(f"- Q&A pair: {c.is_qa_pair}")
-        lines.append(f"- Word count: {wc}")
+        lines.append(f"### {c.chunk_id}  ·  {c.chunk_type.value}")
+        lines.append(f"- Speaker      : {c.speaker}")
+        if c.analyst_speaker:
+            lines.append(f"- Analyst      : {c.analyst_speaker}")
+        lines.append(f"- Pages        : {pages}")
+        lines.append(f"- Words        : {c.word_count}")
+        lines.append(f"- Turns        : {len(c.turns)}")
+        lines.append("")
+        # Turn breakdown
+        for t in c.turns:
+            lines.append(f"  [{t.role.value}] {t.speaker}  (pg {t.page_start}–{t.page_end})")
         lines.append("")
         lines.append("```")
         lines.append(c.text)
@@ -116,8 +113,8 @@ def dump_company(company: dict) -> None:
     out_path = OUTPUT_DIR / f"{company['slug']}_stage0_dump.md"
     out_path.write_text("\n".join(lines))
     print(
-        f"{company['name']}: {len(chunks)} chunks, "
-        f"{len(speaker_roles)} unique speakers -> {out_path}"
+        f"{company['name']}: {len(chunks)} chunks "
+        f"({opening_count} opening, {qa_count} qa, {solo_count} solo) -> {out_path}"
     )
 
 

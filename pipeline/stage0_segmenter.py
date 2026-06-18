@@ -1,642 +1,666 @@
 """
-Stage 0 — Deterministic Segmenter
+Stage 0 — Deterministic Segmenter (pdfplumber implementation)
 
-Converts raw PDF transcript text into Q&A-paired Chunk objects with speaker
-metadata attached. No LLM involved — pure Python text processing.
+Converts a PDF transcript into a list of Chunk objects with speaker metadata.
+No LLM involved — pure Python text processing.
 
-Pipeline position: 1 of 6 (build first, nothing depends on it yet)
+Improvements over the pypdf implementation:
+  - pdfplumber layout=True preserves paragraph spacing and column order
+  - Per-page header/footer stripping (company name, date, page number)
+  - Paragraph-boundary speaker detection (no mid-comment false positives)
+  - Analyst session grouping: all turns in one analyst's engagement → one QA_SESSION chunk
 
-Input:
-    transcript_text   : str              — full text extracted from PDF via pypdf
-    transcript_pages  : Dict[int, str]   — {page_number: page_text}
-
-Output:
-    List[Chunk]  — ordered chunks ready for Stage 1 filtering
+Pipeline position: Stage 0 of 6 (build first; nothing depends on it yet)
 
 Public API:
-    segment(transcript_text, transcript_pages) -> List[Chunk]
-    extract_pages_from_pdf(pdf_path) -> Dict[int, str]   # helper for callers
+    segment(pdf_path, content_start_page=3) -> List[Chunk]
+    extract_pages_from_pdf(pdf_path, content_start_page=3) -> Dict[int, str]
 """
 
 from __future__ import annotations
 
 import logging
 import re
+from collections import Counter
 from typing import Dict, List, Optional, Tuple
 
-from pypdf import PdfReader
+import pdfplumber
 
-from .models import Chunk, ChunkRole
+from .models import Chunk, ChunkRole, ChunkType, Turn
 
 logger = logging.getLogger(__name__)
 
-
 # ─────────────────────────────────────────────────────────────────────────────
-# Speaker header detection
-# Patterns applied in priority order — first match wins.
-# Applied per line (stripped). Returns speaker name if matched, else None.
+# A. PDF extraction
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Type alias for compiled pattern list
-_PatternList = List[Tuple[str, re.Pattern]]
-
-# A "name word" is either a normal capitalised word (Lakshmana, Rao, O'Brien)
-# or a cluster of 1-3 initials (J., S.K., S.K.M.). The initials form is needed
-# for names like "J. Lakshmana Rao" -- the old [A-Z][a-zA-Z']+ pattern
-# required >=2 letters with no period, so "J." never matched anything.
-_NAME_WORD = r"(?:[A-Z][a-zA-Z']+|(?:[A-Z]\.){1,3})"
-_NAME = rf"{_NAME_WORD}(?:\s+{_NAME_WORD}){{0,3}}"
+# Type alias: {1-indexed page number: raw page text}
+_PageMap = Dict[int, str]
 
 
-def _compile_speaker_patterns() -> _PatternList:
-    return [
-        # Pattern D: exact moderator/operator keywords (case-insensitive)
-        (
-            "D",
-            re.compile(
-                r"(MODERATOR|OPERATOR|Moderator|Operator|Operator\s*/\s*Moderator)\s*:",
-                re.IGNORECASE,
-            ),
-        ),
-        # Pattern E: generic "Management:"
-        (
-            "E",
-            re.compile(r"(Management)\s*:", re.IGNORECASE),
-        ),
-        # Pattern A: "First Last – Title:" or "First Last - Title:"
-        # Name = 1–4 name-words; title is 1–80 non-colon chars
-        (
-            "A",
-            re.compile(rf"({_NAME})\s*[–\-]\s*[^:\n]{{1,80}}:"),
-        ),
-        # Pattern B: "First Last (Title):"
-        (
-            "B",
-            re.compile(rf"({_NAME})\s*\([^)]{{1,100}}\)\s*:"),
-        ),
-        # Pattern C: "First Last:" — requires ≥2 words to avoid false positives
-        # (e.g. "Note:" or "Outlook:" would be single-word and rejected)
-        (
-            "C",
-            re.compile(rf"({_NAME})\s*:"),
-        ),
-    ]
-
-
-_SPEAKER_PATTERNS: _PatternList = _compile_speaker_patterns()
-_MODERATOR_KEYWORDS = frozenset({"moderator", "operator"})
-_PATTERN_PRIORITY = {"D": 0, "E": 1, "A": 2, "B": 3, "C": 4}
-
-
-def _find_speaker_matches(text: str) -> List[Tuple[int, int, str, str]]:
+def extract_pages_from_pdf(pdf_path: str, content_start_page: int = 3) -> _PageMap:
     """
-    Find all candidate speaker-header matches anywhere in *text*.
+    Extract {page_number: raw_text} from a PDF using pdfplumber layout=True.
 
-    Returns (start, end, name, pattern_id) tuples sorted by position.
-    Overlapping matches at/near the same position are resolved by pattern
-    priority (D > E > A > B > C) -- whichever pattern wins "owns" that span,
-    and any other match overlapping it is dropped.
+    Page numbers are positional (1-indexed from the start of the PDF).
+    content_start_page is the first page with speaker turns (page 1–2 are
+    typically cover letter and participant list).
     """
-    raw: List[Tuple[int, int, str, str]] = []
-    for pid, pattern in _SPEAKER_PATTERNS:
-        for m in pattern.finditer(text):
-            name = m.group(1).strip()
-            # Pattern C guard: reject single-word matches like "Outlook:"
-            if pid == "C" and len(name.split()) < 2:
+    result: _PageMap = {}
+    with pdfplumber.open(pdf_path) as pdf:
+        for i, page in enumerate(pdf.pages):
+            page_num = i + 1
+            if page_num < content_start_page:
                 continue
-            raw.append((m.start(), m.end(), name, pid))
+            result[page_num] = page.extract_text(layout=True) or ""
+    return result
 
-    raw.sort(key=lambda t: (t[0], _PATTERN_PRIORITY[t[3]]))
 
-    kept: List[Tuple[int, int, str, str]] = []
-    last_end = -1
-    for start, end, name, pid in raw:
-        if start < last_end:
+def _extract_page2_text(pdf_path: str) -> str:
+    """Return raw text of page 2 (participant list page)."""
+    with pdfplumber.open(pdf_path) as pdf:
+        if len(pdf.pages) >= 2:
+            return pdf.pages[1].extract_text(layout=True) or ""
+    return ""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# B. Header / footer stripping
+# ─────────────────────────────────────────────────────────────────────────────
+
+_MONTHS = (
+    "January|February|March|April|May|June|"
+    "July|August|September|October|November|December"
+)
+_DATE_RE        = re.compile(rf"^({_MONTHS})\s+\d{{1,2}},?\s+\d{{4}}$", re.I)
+_COMPANY_RE     = re.compile(r"^.+\b(Limited|Ltd\.?|Inc\.?|Corp\.?|Pvt\.?)$", re.I)
+_PAGE_NUMBER_RE = re.compile(r"^Page\s+\d+\s+of\s+\d+$", re.I)
+_PAGE_PIPE_RE   = re.compile(r"^\d+\s*\|$|^\|\s*\d+$")  # "2 |" or "| 2"
+
+
+def _is_header_footer_line(s: str) -> bool:
+    return bool(_DATE_RE.match(s) or _COMPANY_RE.match(s) or _PAGE_NUMBER_RE.match(s))
+
+
+def _strip_header_footer(page_text: str) -> str:
+    """
+    Remove company name, date, and page number lines that appear at the top
+    and bottom of each page. Scans inward from each edge — stops the moment
+    real content is reached so mid-page lines are never touched.
+    """
+    lines = page_text.split("\n")
+
+    # Top: skip blanks, remove header lines, stop at first real content
+    for i, line in enumerate(lines):
+        s = line.strip()
+        if not s:
             continue
-        kept.append((start, end, name, pid))
-        last_end = end
+        if _is_header_footer_line(s):
+            lines[i] = ""
+        else:
+            break
 
-    return kept
-
-
-def _boundary_kind(text: str, start: int) -> Optional[str]:
-    """
-    Classify the gap immediately before position *start*:
-      "strong" — start of document, or a line break appears in the gap
-      "weak"   — gap (whitespace only) is preceded by '.', '?' or '!'
-      None     — not a valid turn-boundary position
-    """
-    j = start
-    saw_newline = False
-    while j > 0 and text[j - 1] in " \t\r\n":
-        if text[j - 1] == "\n":
-            saw_newline = True
-        j -= 1
-
-    if j == 0 or saw_newline:
-        return "strong"
-    if text[j - 1] in ".?!":
-        return "weak"
-    return None
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Step 1 — Split transcript into raw turns
-# ─────────────────────────────────────────────────────────────────────────────
-
-# (speaker_name, turn_text, char_start, char_end)
-_RawTurn = Tuple[str, str, int, int]
-
-
-def _split_into_turns(transcript_text: str) -> List[_RawTurn]:
-    """
-    Find every valid speaker-header turn boundary in the transcript and
-    split the text between consecutive boundaries into turns.
-
-    Boundaries are found anywhere in the text (not just at line starts) via
-    _find_speaker_matches + _boundary_kind. "Strong" boundaries (start of
-    document or after a line break) are always kept. "Weak" boundaries
-    (after sentence-ending punctuation, no line break) are only kept if that
-    speaker name recurs at another valid boundary elsewhere -- this is what
-    lets transcripts with no inter-speaker line breaks (e.g. Sandhar) still
-    be split correctly, without letting a one-off "Capitalised Words:"
-    phrase mid-paragraph be mistaken for a speaker change.
-
-    Returns a list of (speaker, text, char_start, char_end).
-    """
-    candidates = _find_speaker_matches(transcript_text)
-
-    classified: List[Tuple[int, int, str, str]] = []  # start, end, name, kind
-    for start, end, name, _pid in candidates:
-        kind = _boundary_kind(transcript_text, start)
-        if kind is not None:
-            classified.append((start, end, name, kind))
-
-    name_counts: Dict[str, int] = {}
-    for _, _, name, _ in classified:
-        name_counts[name] = name_counts.get(name, 0) + 1
-
-    boundaries = [
-        (start, end, name)
-        for start, end, name, kind in classified
-        if kind == "strong" or name_counts[name] >= 2
-    ]
-
-    turns: List[_RawTurn] = []
-    for i, (_start, end, name) in enumerate(boundaries):
-        text_start = end
-        text_end = (
-            boundaries[i + 1][0] if i + 1 < len(boundaries) else len(transcript_text)
-        )
-        turn_text = transcript_text[text_start:text_end].strip()
-        if turn_text:
-            turns.append((name, turn_text, text_start, text_end))
-
-    return turns
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Step 2 — Role classification
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Extends _RawTurn with role
-_TurnWithRole = Tuple[str, str, int, int, ChunkRole]
-
-# Matches "MR./MS./MRS./DR. NAME -" inside the participant-list header,
-# capturing the ALL-CAPS name before the title text that follows the dash.
-_ROSTER_NAME_RE = re.compile(r"(?:MR|MS|MRS|DR)\.\s*([A-Z][A-Z.\s]*?)\s*[–\-]")
-
-
-def _extract_management_roster(transcript_text: str) -> set[str]:
-    """
-    Parse the participant-list header near the top of every transcript --
-    "MANAGEMENT: MR. X - Title, MR. Y - Title ... MODERATOR: MS. Z - Title"
-    -- and return the management speaker names normalised to the Title Case
-    form used as speaker headers in the transcript body (e.g. "Jayant Davar",
-    "J. Lakshmana Rao").
-
-    Authoritative source for _classify_roles: doesn't depend on WHEN a
-    speaker first talks, unlike the "first 4 non-moderator turns" fallback
-    below. Returns an empty set if no "MANAGEMENT:" block is found, so
-    callers can fall back to that heuristic.
-    """
-    m = re.search(r"MANAGEMENT\s*:(.*?)(?:MODERATOR\s*:|$)", transcript_text, re.S | re.I)
-    if not m:
-        return set()
-
-    roster: set[str] = set()
-    for raw_name in _ROSTER_NAME_RE.findall(m.group(1)):
-        normalized = " ".join(w.title() for w in raw_name.split())
-        if normalized:
-            roster.add(normalized)
-
-    return roster
-
-
-def _classify_roles(
-    raw_turns: List[_RawTurn], mgmt_roster: Optional[set[str]] = None
-) -> List[_TurnWithRole]:
-    """
-    Assign ChunkRole to each turn.
-
-    Management speakers come from *mgmt_roster* (see
-    _extract_management_roster) -- names parsed from the transcript's own
-    participant list. This is authoritative and doesn't depend on when a
-    speaker first talks, unlike the old "first 4 non-moderator turns"
-    heuristic, which got this wrong in both directions: a management speaker
-    who only talks late (e.g. a CFO answering Q&A) was misclassified as
-    analyst, while a non-management name occupying an early slot (e.g. a
-    cover-letter artifact, or the first analyst) was misclassified as
-    management.
-
-    If *mgmt_roster* is empty/not provided (participant list not found or
-    not in the expected format), fall back to the "first 4 non-moderator
-    turns" heuristic so unusual transcripts still get a best-effort
-    classification.
-    """
-    if mgmt_roster:
-        mgmt_speakers: set[str] = set(mgmt_roster)
-    else:
-        # Fallback: first 4 non-moderator speaker names from the opening
-        mgmt_speakers = set()
-        non_mod_count = 0
-        for speaker, _, _, _ in raw_turns:
-            sl = speaker.lower()
-            if any(kw in sl for kw in _MODERATOR_KEYWORDS) or sl == "management":
-                continue
-            non_mod_count += 1
-            if non_mod_count <= 4:
-                mgmt_speakers.add(speaker)
+    # Bottom: skip blanks, remove footer lines, stop at first real content
+    checked_last = False
+    for i in range(len(lines) - 1, -1, -1):
+        s = lines[i].strip()
+        if not s:
+            continue
+        if not checked_last:
+            checked_last = True
+            if _PAGE_PIPE_RE.match(s) or _is_header_footer_line(s):
+                lines[i] = ""
             else:
                 break
-
-    logger.debug("Management speakers: %s", mgmt_speakers)
-
-    result: List[_TurnWithRole] = []
-    for speaker, text, cs, ce in raw_turns:
-        sl = speaker.lower()
-        if any(kw in sl for kw in _MODERATOR_KEYWORDS):
-            role = ChunkRole.MODERATOR
-        elif sl == "management":
-            role = ChunkRole.MANAGEMENT
-        elif speaker in mgmt_speakers:
-            role = ChunkRole.MANAGEMENT
+        elif _is_header_footer_line(s):
+            lines[i] = ""
         else:
-            role = ChunkRole.ANALYST
+            break
 
-        result.append((speaker, text, cs, ce, role))
+    # Strip leading/trailing blank lines left by layout=True whitespace
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    while lines and not lines[-1].strip():
+        lines.pop()
 
-    return result
+    return "\n".join(lines)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Step 3 — Q&A pairing
+# C. Participant list extraction (page 2)
 # ─────────────────────────────────────────────────────────────────────────────
 
-_ChunkDict = dict  # intermediate representation before Chunk model is built
+# Matches: honorific + name (ALL-CAPS or Title Case) + separator (dash or colon)
+# Handles both:
+#   MS. AARTI JHUNJHUNWALA – EXECUTIVE DIRECTOR  (Fineotex — ALL-CAPS, dash)
+#   Mr. Amit Syngle : MD & CEO                   (Asian Paints — Title Case, colon)
+_MGMT_NAME_RE = re.compile(
+    r"(?:MR|MS|MRS|DR)\.\s+([A-Z][A-Za-z.]+(?:\s+[A-Z][A-Za-z.]+){0,2})\s*[–\-:]",
+    re.IGNORECASE,
+)
 
 
-def _create_qa_pairs(turns: List[_TurnWithRole]) -> List[_ChunkDict]:
+def _extract_names_from_block(page2_text: str, block_label: str) -> set[str]:
+    """Extract honorific-prefixed names from a named block (MANAGEMENT, MODERATOR, etc.)."""
+    m = re.search(
+        rf"^[ \t]*{re.escape(block_label)}\s*:(.*?)(?=^[ \t]*(?:MANAGEMENT|MODERATOR|ANALYST|PARTICIPANTS?|SPEAKERS?)\s*:|\Z)",
+        page2_text,
+        re.S | re.I | re.MULTILINE,
+    )
+    if not m:
+        return set()
+    names: set[str] = set()
+    for raw in _MGMT_NAME_RE.findall(m.group(1)):
+        name = " ".join(raw.split()).title()
+        if name:
+            names.add(name)
+    return names
+
+
+def _extract_management_names(page2_text: str) -> set[str]:
+    for label in ("MANAGEMENT", "PARTICIPANTS", "PARTICIPANT", "SPEAKERS", "SPEAKER"):
+        names = _extract_names_from_block(page2_text, label)
+        if names:
+            return names
+    logger.warning(
+        "No management block found on page 2 — all non-moderator speakers "
+        "will be labelled analyst"
+    )
+    return set()
+
+
+def _extract_moderator_names(page2_text: str) -> set[str]:
+    """Named moderators listed under MODERATOR: on page 2 (sell-side host)."""
+    return _extract_names_from_block(page2_text, "MODERATOR")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# D. Speaker detection utilities
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Paragraph-boundary speaker pattern:
+#   ^\s*                  — optional indent (0-space Asian Paints, 10-space Fineotex)
+#   (?:[A-Z]\.\s+){0,2}  — optional leading initials: "J. " or "R.J. "
+#   [A-Z][a-z]+           — first proper word: Title Case (rejects ALL-CAPS, rejects "Q")
+#   (...){0,3}            — up to 3 more words
+#   \s*:                  — colon, optional space before
+_PARA_SPEAKER_RE = re.compile(
+    r"^\s*((?:[A-Z]\.\s+){0,2}[A-Z][a-z]+(?:\s+[A-Z][a-z.]*){0,3})\s*:"
+)
+
+_SPEAKER_BLOCKLIST = {
+    "Note", "Disclaimer", "Background", "Summary", "Conclusion",
+    "Important", "Update", "Result", "Overview", "Outlook",
+    "Please", "Date", "Venue", "Time", "Subject", "Dear",
+    "Thanks", "Regards", "Encl", "Sir", "Madam", "Yours",
+}
+
+_MOD_RE = re.compile(r"^(moderator|operator)$", re.I)
+
+
+def _is_valid_speaker(name: str) -> bool:
+    words = name.split()
+    if len(words) == 1 and words[0] in _SPEAKER_BLOCKLIST:
+        return False
+    return True
+
+
+def _in_roster(name: str, roster: set[str]) -> bool:
     """
-    Combine ANALYST turn + immediately following MANAGEMENT turn into one
-    Q&A-pair chunk so Stage 2 always sees the question context alongside the
-    answer.  This is why the Fineotex GT1 item (value accepted in analyst Q)
-    can be extracted correctly.
+    Exact match OR single-word last-name fallback (min 4 chars).
 
-    Rules:
-    - ANALYST turn → find next MANAGEMENT turn (skip MODERATOR turns between)
-    - MODERATOR turn with "?" in text → treated as analyst question (written submission)
-    - Consecutive MANAGEMENT turns after an answer → absorbed into the same chunk
-    - Solo MANAGEMENT turn (not preceded by analyst) → standalone chunk
-    - Standalone MODERATOR turns → dropped (administrative text)
+    Multi-word names require exact match to prevent false positives
+    (e.g. "Chirag Jain" must not match "Yashpal Jain").
+    Single-word names (e.g. "Jeyamurugan") are looked up by last name.
     """
-    consumed: set[int] = set()
-    chunks: List[_ChunkDict] = []
+    if name in roster:
+        return True
+    words = name.split()
+    if len(words) == 1 and len(words[0]) >= 4:
+        last = words[0].lower()
+        return any(m.split()[-1].lower() == last for m in roster)
+    return False
 
-    for i, (speaker, text, cs, ce, role) in enumerate(turns):
-        if i in consumed:
+
+def _is_management_speaker(speaker: str, mgmt_names: set[str]) -> bool:
+    return _in_roster(speaker, mgmt_names)
+
+
+def _is_moderator_speaker(speaker: str, moderator_names: set[str]) -> bool:
+    """Generic Moderator/Operator keyword OR exact match in named moderator roster."""
+    if _MOD_RE.match(speaker.strip()):
+        return True
+    return speaker in moderator_names  # exact match only — no last-name fallback
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# E. Speaker name detection from full text
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _detect_speaker_names(full_text: str) -> Counter:
+    """
+    Scan each paragraph's first non-blank line for a speaker-header pattern.
+    Returns Counter of {name: occurrence_count}.
+    """
+    paragraphs = re.split(r"(?:\n[ \t]*){2,}", full_text)
+    detected: Counter = Counter()
+    for para in paragraphs:
+        non_blank = [l for l in para.split("\n") if l.strip()]
+        if not non_blank:
             continue
-
-        # Moderator reading a written question from the floor
-        is_mod_question = role == ChunkRole.MODERATOR and "?" in text
-
-        if role == ChunkRole.ANALYST or is_mod_question:
-            # Scan forward for the management response, skipping any moderators
-            j = i + 1
-            while j < len(turns) and turns[j][4] == ChunkRole.MODERATOR:
-                j += 1
-
-            if j < len(turns) and turns[j][4] == ChunkRole.MANAGEMENT:
-                mgmt_speaker, mgmt_text, _, mgmt_ce, _ = turns[j]
-                consumed.add(j)
-
-                # Absorb consecutive MANAGEMENT turns (multiple-speaker edge case:
-                # MD answers first, then CFO adds to it)
-                k = j + 1
-                while k < len(turns) and turns[k][4] == ChunkRole.MANAGEMENT:
-                    mgmt_text += "\n\n" + turns[k][1]
-                    mgmt_ce = turns[k][3]
-                    consumed.add(k)
-                    k += 1
-
-                chunks.append(
-                    {
-                        "speaker": mgmt_speaker,
-                        "role": ChunkRole.MANAGEMENT,
-                        "text": text + "\n\n" + mgmt_text,
-                        "char_start": cs,
-                        "char_end": mgmt_ce,
-                        "is_qa_pair": True,
-                    }
-                )
-            # else: analyst question with no following management turn — skip
-
-        elif role == ChunkRole.MANAGEMENT:
-            # Solo management turn (opening monologue or unpaired answer)
-            chunks.append(
-                {
-                    "speaker": speaker,
-                    "role": ChunkRole.MANAGEMENT,
-                    "text": text,
-                    "char_start": cs,
-                    "char_end": ce,
-                    "is_qa_pair": False,
-                }
-            )
-
-        # Standalone MODERATOR turns: drop entirely
-
-    return chunks
+        m = _PARA_SPEAKER_RE.match(non_blank[0])
+        if m:
+            name = m.group(1).strip()
+            if _is_valid_speaker(name):
+                detected[name] += 1
+    return detected
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Step 4 — Long-turn splitting
-# ─────────────────────────────────────────────────────────────────────────────
-
-_MAX_WORDS = 1_500     # chunks above this word count are split
-_OVERLAP_CHARS = 200   # overlap carried into the next sub-chunk
-
-
-def _split_chunk(
-    chunk: _ChunkDict,
-) -> List[Tuple[_ChunkDict, Optional[int]]]:
-    """
-    Split a chunk exceeding _MAX_WORDS at paragraph ("\n\n") boundaries with
-    a _OVERLAP_CHARS character overlap between adjacent sub-chunks.
-
-    Returns [(chunk_dict, sub_index)] where sub_index is:
-      - None  → chunk was not split
-      - 0, 1, 2, … → zero-based index of this sub-chunk within the parent
-    """
-    if len(chunk["text"].split()) <= _MAX_WORDS:
-        return [(chunk, None)]
-
-    paras = chunk["text"].split("\n\n")
-    sub_texts: List[str] = []
-    current: List[str] = []
-    current_wc: int = 0
-
-    for para in paras:
-        pw = len(para.split())
-        if current_wc + pw > _MAX_WORDS and current:
-            block = "\n\n".join(current)
-            sub_texts.append(block)
-            # Overlap: last _OVERLAP_CHARS chars of this block seed the next
-            overlap = block[-_OVERLAP_CHARS:] if len(block) > _OVERLAP_CHARS else block
-            current = [overlap, para] if overlap.strip() else [para]
-            current_wc = len("\n\n".join(current).split())
-        else:
-            current.append(para)
-            current_wc += pw
-
-    if current:
-        sub_texts.append("\n\n".join(current))
-
-    if len(sub_texts) <= 1:
-        # Splitting produced only one block (edge case) — no split needed
-        return [(chunk, None)]
-
-    result: List[Tuple[_ChunkDict, Optional[int]]] = []
-    for idx, st in enumerate(sub_texts):
-        sub = dict(chunk)   # shallow copy preserves speaker/role/page metadata
-        sub["text"] = st
-        result.append((sub, idx))
-
-    return result
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Step 5 — Page attribution
+# F. Turn extraction with character offsets
 # ─────────────────────────────────────────────────────────────────────────────
 
 
 def _build_page_boundaries(
-    transcript_pages: Dict[int, str],
+    clean_pages: _PageMap, content_start_page: int
 ) -> Dict[int, Tuple[int, int]]:
     """
-    Map each page number to (char_start, char_end) in the concatenated text.
-
-    Assumption: transcript_text ≈ "".join(transcript_pages[i] for i in sorted pages).
-    In practice pypdf can produce slightly different output per-page vs whole-doc,
-    so page attribution is approximate (±1 page).  This is acceptable — page number
-    is metadata, not used for text matching.
+    Map each page number to (char_start, char_end) in the concatenated full_text.
+    full_text = "\n".join(clean_pages[pn] for pn in sorted(clean_pages))
+    so each page separator adds 1 char.
     """
     boundaries: Dict[int, Tuple[int, int]] = {}
     offset = 0
-    for pn in sorted(transcript_pages.keys()):
-        pt = transcript_pages[pn]
-        boundaries[pn] = (offset, offset + len(pt))
-        offset += len(pt)
+    for pn in sorted(clean_pages.keys()):
+        page_text = clean_pages[pn]
+        boundaries[pn] = (offset, offset + len(page_text))
+        offset += len(page_text) + 1  # +1 for the "\n" join separator
     return boundaries
 
 
 def _char_to_page(
-    char_offset: int,
-    page_boundaries: Dict[int, Tuple[int, int]],
+    char_offset: int, page_boundaries: Dict[int, Tuple[int, int]]
 ) -> int:
-    """Return the page number that contains *char_offset*."""
     for pn in sorted(page_boundaries.keys()):
         start, end = page_boundaries[pn]
         if start <= char_offset < end:
             return pn
-    # Fallback: return last page (handles off-by-one at end of document)
     return max(page_boundaries.keys(), default=1)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Fallback: page-level chunking
-# Used when speaker detection finds fewer than 5 turns (degraded mode).
-# ─────────────────────────────────────────────────────────────────────────────
+def _normalize_comment(raw_text: str) -> str:
+    """Collapse layout whitespace: remove newlines, deduplicate spaces."""
+    text = raw_text.replace("\n", " ")
+    return re.sub(r" {2,}", " ", text).strip()
 
 
-def _fallback_page_chunks(transcript_pages: Dict[int, str]) -> List[Chunk]:
-    logger.warning(
-        "Fewer than 5 speaker turns detected. "
-        "Falling back to page-level chunking (degraded mode). "
-        "Speaker detection regex may need adjustment for this transcript format."
+def _extract_turns_with_offsets(
+    full_text: str,
+    split_re: re.Pattern,
+    mgmt_names: set[str],
+    moderator_names: set[str],
+    page_boundaries: Dict[int, Tuple[int, int]],
+) -> List[dict]:
+    """
+    Use finditer on split_re to recover character positions for every turn.
+    Returns list of {speaker, role, text, char_start, char_end, page_start, page_end}.
+    """
+    matches = list(split_re.finditer(full_text))
+    result = []
+    for idx, m in enumerate(matches):
+        speaker = m.group(1).strip()
+        text_start = m.end()
+        text_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(full_text)
+        normalized = _normalize_comment(full_text[text_start:text_end])
+        if not normalized:
+            continue
+
+        char_start = m.start()
+        char_end = text_end
+
+        if _is_moderator_speaker(speaker, moderator_names):
+            role = "moderator"
+        elif _is_management_speaker(speaker, mgmt_names):
+            role = "management"
+        else:
+            role = "analyst"
+
+        result.append({
+            "speaker":    speaker,
+            "role":       role,
+            "text":       normalized,
+            "char_start": char_start,
+            "char_end":   char_end,
+            "page_start": _char_to_page(char_start, page_boundaries),
+            "page_end":   _char_to_page(max(char_end - 1, char_start), page_boundaries),
+        })
+    return result
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# G. Session grouping → Chunk objects
+# ─────────────────────────────────────────────────────────────────────────────
+
+_OPENING_WORD_LIMIT = 600
+
+
+def _format_chunk_text(session_turns: List[dict]) -> str:
+    parts = [
+        f"{t['role'].title()} ({t['speaker']}): {t['text']}"
+        for t in session_turns
+    ]
+    return "\n\n".join(parts)
+
+
+def _make_turn_obj(t: dict) -> Turn:
+    return Turn(
+        speaker=t["speaker"],
+        role=ChunkRole(t["role"]),
+        text=t["text"],
+        page_start=t["page_start"],
+        page_end=t["page_end"],
+        char_start=t["char_start"],
+        char_end=t["char_end"],
     )
+
+
+def _make_chunk_obj(
+    chunk_id: str,
+    chunk_type: ChunkType,
+    session_turns: List[dict],
+    analyst_speaker: Optional[str] = None,
+) -> Chunk:
+    mgmt_speaker = next(
+        (t["speaker"] for t in session_turns if t["role"] == "management"),
+        session_turns[0]["speaker"],
+    )
+    text = _format_chunk_text(session_turns)
+    return Chunk(
+        chunk_id=chunk_id,
+        chunk_type=chunk_type,
+        speaker=mgmt_speaker,
+        analyst_speaker=analyst_speaker,
+        role=ChunkRole.MANAGEMENT,
+        page_start=session_turns[0]["page_start"],
+        page_end=session_turns[-1]["page_end"],
+        char_start=session_turns[0]["char_start"],
+        char_end=session_turns[-1]["char_end"],
+        word_count=len(text.split()),
+        text=text,
+        turns=[_make_turn_obj(t) for t in session_turns],
+    )
+
+
+def _split_turn_by_paragraphs(turn_dict: dict, word_limit: int) -> List[dict]:
+    """Split a single turn's text at paragraph boundaries if it exceeds word_limit."""
+    paras = [p.strip() for p in turn_dict["text"].split("\n\n") if p.strip()]
+    groups: List[str] = []
+    current: List[str] = []
+    current_words = 0
+    for para in paras:
+        pw = len(para.split())
+        if current_words + pw > word_limit and current:
+            groups.append("\n\n".join(current))
+            current, current_words = [], 0
+        current.append(para)
+        current_words += pw
+    if current:
+        groups.append("\n\n".join(current))
+    if len(groups) <= 1:
+        return [turn_dict]
+    return [{**turn_dict, "text": g} for g in groups]
+
+
+def _group_into_chunks(raw_turns: List[dict]) -> List[Chunk]:
+    """
+    Convert the flat turn sequence into Chunk objects:
+      - OPENING_REMARKS: management turns before the first analyst, split at 600 words
+      - QA_SESSION: all turns in one analyst's engagement (questions, follow-ups, answers)
+      - MANAGEMENT_SOLO: solo management turn not preceded by an analyst
+
+    Moderator turns between sessions are buffered and prepended to the next session.
+    Trailing moderator turns at end of opening are seeded into the first QA session.
+    """
     chunks: List[Chunk] = []
-    offset = 0
-    for pn in sorted(transcript_pages.keys()):
-        pt = transcript_pages[pn]
-        text = pt.strip()
-        if text:
+    chunk_seq = 0
+
+    first_analyst = next(
+        (i for i, t in enumerate(raw_turns) if t["role"] == "analyst"),
+        len(raw_turns),
+    )
+
+    # ── Opening remarks ───────────────────────────────────────────────────────
+    opening_pool: List[dict] = []
+    mod_buffer: List[dict] = []
+
+    for t in raw_turns[:first_analyst]:
+        if t["role"] == "management":
+            opening_pool.extend(mod_buffer)
+            mod_buffer = []
+            opening_pool.extend(_split_turn_by_paragraphs(t, _OPENING_WORD_LIMIT))
+        else:
+            mod_buffer.append(t)
+
+    # Trailing moderator turns after last management opening turn → prepend to first QA
+    pending_mod = mod_buffer
+
+    current_group: List[dict] = []
+    current_words = 0
+    for sub in opening_pool:
+        sw = len(sub["text"].split())
+        if current_words + sw > _OPENING_WORD_LIMIT and current_group:
+            chunk_seq += 1
             chunks.append(
-                Chunk(
-                    chunk_id=f"chunk_{pn:03d}",
-                    speaker="unknown",
-                    role=ChunkRole.MANAGEMENT,
-                    page_start=pn,
-                    page_end=pn,
-                    text=text,
-                    char_start=offset,
-                    char_end=offset + len(pt),
-                    is_qa_pair=False,
+                _make_chunk_obj(f"chunk_{chunk_seq:03d}", ChunkType.OPENING_REMARKS, current_group)
+            )
+            current_group, current_words = [], 0
+        current_group.append(sub)
+        current_words += sw
+    if current_group:
+        chunk_seq += 1
+        chunks.append(
+            _make_chunk_obj(f"chunk_{chunk_seq:03d}", ChunkType.OPENING_REMARKS, current_group)
+        )
+
+    # ── Q&A sessions and management solo turns ────────────────────────────────
+    i = first_analyst
+    n = len(raw_turns)
+
+    while i < n:
+        t = raw_turns[i]
+
+        if t["role"] == "analyst":
+            analyst_name = t["speaker"]
+            session = pending_mod + [t]
+            pending_mod = []
+            i += 1
+
+            local_mod: List[dict] = []
+
+            while i < n:
+                curr = raw_turns[i]
+                if curr["role"] == "moderator":
+                    local_mod.append(curr)
+                    i += 1
+                elif curr["role"] == "analyst" and curr["speaker"] != analyst_name:
+                    # Different analyst — flush local_mod to pending for next session
+                    pending_mod = local_mod
+                    local_mod = []
+                    break
+                else:
+                    # Management or same analyst continuing — absorb local_mod into session
+                    session.extend(local_mod)
+                    local_mod = []
+                    session.append(curr)
+                    i += 1
+
+            # End of transcript: flush remaining local_mod into this session
+            session.extend(local_mod)
+
+            chunk_seq += 1
+            chunks.append(
+                _make_chunk_obj(
+                    f"chunk_{chunk_seq:03d}",
+                    ChunkType.QA_SESSION,
+                    session,
+                    analyst_name,
                 )
             )
-        offset += len(pt)
+
+        elif t["role"] == "moderator":
+            pending_mod.append(t)
+            i += 1
+
+        elif t["role"] == "management":
+            session = pending_mod + [t]
+            pending_mod = []
+            chunk_seq += 1
+            chunks.append(
+                _make_chunk_obj(f"chunk_{chunk_seq:03d}", ChunkType.MANAGEMENT_SOLO, session)
+            )
+            i += 1
+
+    # Trailing moderator closing remarks — append to last chunk
+    if pending_mod and chunks:
+        last = chunks[-1]
+        extra = "\n\n" + "\n\n".join(
+            f"{t['role'].title()} ({t['speaker']}): {t['text']}" for t in pending_mod
+        )
+        last.text += extra
+        last.word_count = len(last.text.split())
+        last.turns.extend(_make_turn_obj(t) for t in pending_mod)
+        last.page_end = pending_mod[-1]["page_end"]
+        last.char_end = pending_mod[-1]["char_end"]
+
     return chunks
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Public helpers
+# Public API
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def extract_pages_from_pdf(pdf_path: str) -> Dict[int, str]:
+def segment(pdf_path: str, content_start_page: int = 3) -> List[Chunk]:
     """
-    Extract {page_number: page_text} from a PDF using pypdf.
-    Page numbers are 1-indexed.
-    Use alongside the full-text extraction in main.py to get both inputs
-    needed by segment().
-    """
-    reader = PdfReader(pdf_path)
-    return {
-        i + 1: (page.extract_text() or "")
-        for i, page in enumerate(reader.pages)
-    }
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Main entry point
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-def segment(
-    transcript_text: str,
-    transcript_pages: Dict[int, str],
-) -> List[Chunk]:
-    """
-    Convert raw transcript text into Q&A-paired Chunk objects.
+    Convert a PDF transcript into an ordered list of Chunk objects.
 
     Steps:
-      1. Detect speaker turns (regex, per-line)
-      2. Classify roles (management / analyst / moderator)
-      3. Pair analyst questions with management answers
-      4. Split long management turns at paragraph boundaries
-      5. Assign page numbers from char offsets
-      6. Assign sequential chunk IDs (chunk_001, chunk_002a, chunk_002b, …)
+      1. Extract page 2 text — parse management and moderator names
+      2. Extract content pages with pdfplumber layout=True
+      3. Strip header/footer from each page
+      4. Concatenate cleaned pages into full_text
+      5. Detect speaker names from paragraph boundaries
+      6. Build split regex and extract turns with char offsets
+      7. Group turns into OPENING_REMARKS / QA_SESSION / MANAGEMENT_SOLO chunks
 
     Args:
-        transcript_text:  Full concatenated PDF text from pypdf.
-        transcript_pages: Dict mapping page_number -> page_text.
+        pdf_path:           Path to the PDF file.
+        content_start_page: First page with speaker turns (default 3; pages 1–2 are
+                            cover letter and participant list in standard Indian concalls).
 
     Returns:
         Ordered list of Chunk objects, all with role=MANAGEMENT.
-        (Analyst-only turns with no following management response are dropped.)
     """
-    if not transcript_text.strip():
+    # ── Step 1: participant list ──────────────────────────────────────────────
+    page2_text = _extract_page2_text(pdf_path)
+    mgmt_names = _extract_management_names(page2_text)
+    moderator_names = _extract_moderator_names(page2_text)
+    logger.info(
+        "Page 2 roster: %d management, %d named moderators",
+        len(mgmt_names),
+        len(moderator_names),
+    )
+    logger.debug("Management names: %s", mgmt_names)
+
+    # ── Steps 2 + 3: extract and clean content pages ──────────────────────────
+    raw_pages = extract_pages_from_pdf(pdf_path, content_start_page)
+    clean_pages: _PageMap = {pn: _strip_header_footer(text) for pn, text in raw_pages.items()}
+    logger.info("Content pages: %d (starting at page %d)", len(clean_pages), content_start_page)
+
+    # ── Step 4: concatenate ───────────────────────────────────────────────────
+    full_text = "\n".join(clean_pages[pn] for pn in sorted(clean_pages.keys()))
+    logger.info("Full text: %d chars, %d words", len(full_text), len(full_text.split()))
+
+    if not full_text.strip():
         logger.warning("Empty transcript text — returning empty chunk list.")
         return []
 
-    page_boundaries = _build_page_boundaries(transcript_pages)
+    # ── Step 5: detect speaker names ─────────────────────────────────────────
+    detected = _detect_speaker_names(full_text)
+    exclude: set[str] = set()  # extend if a false positive needs manual exclusion
+    speaker_names = [name for name in detected if name not in exclude]
+    logger.info("Detected %d unique speaker names", len(speaker_names))
 
-    # ── Step 1: raw turns ────────────────────────────────────────────────────
-    raw_turns = _split_into_turns(transcript_text)
-    logger.info("Step 1: %d raw speaker turns detected", len(raw_turns))
+    if not speaker_names:
+        logger.warning(
+            "No speaker names detected — falling back to full-page chunks (degraded mode)."
+        )
+        return _fallback_page_chunks(clean_pages)
+
+    # ── Step 6: extract turns with offsets ───────────────────────────────────
+    # Longest names first to avoid partial matches (e.g. "Aarti" before "Aarti Jhunjhunwala")
+    name_alts = "|".join(
+        re.escape(n) for n in sorted(speaker_names, key=len, reverse=True)
+    )
+    split_re = re.compile(rf"^\s*({name_alts})\s*:", re.MULTILINE)
+
+    page_boundaries = _build_page_boundaries(clean_pages, content_start_page)
+    raw_turns = _extract_turns_with_offsets(
+        full_text, split_re, mgmt_names, moderator_names, page_boundaries
+    )
+    logger.info("Raw turns: %d", len(raw_turns))
 
     if len(raw_turns) < 5:
-        return _fallback_page_chunks(transcript_pages)
+        logger.warning(
+            "Fewer than 5 turns detected — falling back to page-level chunks (degraded mode)."
+        )
+        return _fallback_page_chunks(clean_pages)
 
-    # ── Step 2: roles ────────────────────────────────────────────────────────
-    mgmt_roster = _extract_management_roster(transcript_text)
-    logger.debug("Management roster from participant list: %s", mgmt_roster)
-    turns_with_roles = _classify_roles(raw_turns, mgmt_roster)
-
-    mgmt_count = sum(1 for t in turns_with_roles if t[4] == ChunkRole.MANAGEMENT)
-    analyst_count = sum(1 for t in turns_with_roles if t[4] == ChunkRole.ANALYST)
+    role_counts = Counter(t["role"] for t in raw_turns)
     logger.info(
-        "Step 2: %d management turns, %d analyst turns, %d moderator turns",
-        mgmt_count,
-        analyst_count,
-        len(turns_with_roles) - mgmt_count - analyst_count,
+        "Roles: %d management, %d analyst, %d moderator",
+        role_counts["management"],
+        role_counts["analyst"],
+        role_counts["moderator"],
     )
 
-    # ── Step 3: Q&A pairing ──────────────────────────────────────────────────
-    chunk_dicts = _create_qa_pairs(turns_with_roles)
-    qa_pairs = sum(1 for c in chunk_dicts if c["is_qa_pair"])
+    # ── Step 7: session grouping ──────────────────────────────────────────────
+    chunks = _group_into_chunks(raw_turns)
+
+    type_counts = Counter(c.chunk_type.value for c in chunks)
     logger.info(
-        "Step 3: %d chunks (%d Q&A pairs, %d solo management)",
-        len(chunk_dicts),
-        qa_pairs,
-        len(chunk_dicts) - qa_pairs,
-    )
-
-    # ── Step 4: long-turn splitting ──────────────────────────────────────────
-    flat: List[Tuple[_ChunkDict, Optional[int]]] = []
-    for cd in chunk_dicts:
-        flat.extend(_split_chunk(cd))
-
-    split_count = sum(1 for _, si in flat if si is not None)
-    if split_count:
-        logger.info(
-            "Step 4: %d sub-chunks created by long-turn splitting",
-            split_count,
-        )
-
-    # ── Steps 5 + 6: page attribution + chunk ID assignment ─────────────────
-    chunks: List[Chunk] = []
-    parent_num = 0
-
-    for chunk_dict, sub_idx in flat:
-        # parent_num increments at each new parent (sub_idx None or 0)
-        if sub_idx is None or sub_idx == 0:
-            parent_num += 1
-
-        if sub_idx is None:
-            chunk_id = f"chunk_{parent_num:03d}"
-        else:
-            chunk_id = f"chunk_{parent_num:03d}{chr(ord('a') + sub_idx)}"
-
-        if page_boundaries:
-            page_start = _char_to_page(chunk_dict["char_start"], page_boundaries)
-            page_end = _char_to_page(
-                max(chunk_dict["char_end"] - 1, chunk_dict["char_start"]),
-                page_boundaries,
-            )
-        else:
-            page_start = page_end = 1
-
-        chunks.append(
-            Chunk(
-                chunk_id=chunk_id,
-                speaker=chunk_dict["speaker"],
-                role=chunk_dict["role"],
-                page_start=page_start,
-                page_end=page_end,
-                text=chunk_dict["text"],
-                char_start=chunk_dict["char_start"],
-                char_end=chunk_dict["char_end"],
-                is_qa_pair=chunk_dict["is_qa_pair"],
-            )
-        )
-
-    final_qa = sum(1 for c in chunks if c.is_qa_pair)
-    logger.info(
-        "Stage 0 complete: %d chunks total (%d Q&A pairs, %d solo management)",
+        "Stage 0 complete: %d chunks (%s)",
         len(chunks),
-        final_qa,
-        len(chunks) - final_qa,
+        ", ".join(f"{v} {k}" for k, v in type_counts.most_common()),
     )
+    return chunks
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Fallback: page-level chunking (degraded mode)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _fallback_page_chunks(clean_pages: _PageMap) -> List[Chunk]:
+    chunks: List[Chunk] = []
+    offset = 0
+    for pn in sorted(clean_pages.keys()):
+        text = clean_pages[pn].strip()
+        if not text:
+            offset += len(clean_pages[pn]) + 1
+            continue
+        turn = {
+            "speaker":    "unknown",
+            "role":       "management",
+            "text":       text,
+            "char_start": offset,
+            "char_end":   offset + len(clean_pages[pn]),
+            "page_start": pn,
+            "page_end":   pn,
+        }
+        chunks.append(
+            _make_chunk_obj(f"chunk_{pn:03d}", ChunkType.MANAGEMENT_SOLO, [turn])
+        )
+        offset += len(clean_pages[pn]) + 1
     return chunks

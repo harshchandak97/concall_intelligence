@@ -26,16 +26,36 @@ class ChunkRole(str, Enum):
     MODERATOR = "moderator"
 
 
+class ChunkType(str, Enum):
+    OPENING_REMARKS = "opening_remarks"
+    QA_SESSION      = "qa_session"
+    MANAGEMENT_SOLO = "management_solo"
+
+
+class Turn(BaseModel):
+    """A single speaker turn within a chunk."""
+    speaker:    str
+    role:       ChunkRole
+    text:       str
+    page_start: int
+    page_end:   int
+    char_start: int
+    char_end:   int
+
+
 class Chunk(BaseModel):
-    chunk_id: str        # e.g. "chunk_001" or "chunk_003b" for split sub-chunks
-    speaker: str         # extracted from transcript speaker header
-    role: ChunkRole      # management / analyst / moderator
-    page_start: int      # first page this chunk appears on
-    page_end: int        # last page (may span multiple pages)
-    text: str            # full chunk text — Q&A pair or solo management monologue
-    char_start: int      # character offset in the full transcript text
-    char_end: int        # character offset in the full transcript text
-    is_qa_pair: bool     # True = analyst question + management answer combined
+    chunk_id:        str             # e.g. "chunk_001"
+    chunk_type:      ChunkType       # opening_remarks / qa_session / management_solo
+    speaker:         str             # management speaker who answered
+    analyst_speaker: Optional[str]   # analyst who asked (None for opening/solo chunks)
+    role:            ChunkRole       # always MANAGEMENT for Stage 0 output
+    page_start:      int
+    page_end:        int
+    text:            str             # "Role (Speaker): text\n\n..." per turn
+    char_start:      int
+    char_end:        int
+    word_count:      int
+    turns:           List[Turn]      # ordered raw turns that make up this chunk
 
 
 # ─────────────────────────────────────────────────────────────────────────────
