@@ -19,13 +19,15 @@ This file gives you full context about this project. Read it at the start of eve
 
 Concall Intelligence — Indian Equity Screener
 
-An automated pipeline that downloads Indian company earnings call transcripts from BSE/NSE, extracts quantifiable forward-looking guidance using an LLM, scores each company on guidance quality and credibility, cross-references with valuation data, and outputs a ranked list of companies worth deep research.
+An automated pipeline that downloads Indian company earnings call transcripts from BSE/NSE, extracts quantifiable forward-looking guidance using an LLM, **converts that guidance into a comparable implied PAT CAGR per company under Base and Bull scenarios**, scores each company on guidance quality and credibility, cross-references with valuation data, and outputs a ranked list of companies worth deep research.
 
 Built for personal use by an Indian retail investor with a ₹40L direct equity portfolio. The goal is to surface mid and small cap companies where management is guiding strong growth (short-term AND long-term) but the market has not priced it in yet. Aggressive forward-looking targets are the primary re-rating signal: a company that was growing slowly and then articulates a bullish multi-year vision often gets re-rated as the market begins pricing the outlook ahead of delivery.
 
+**Why extraction alone is not enough:** extraction without a decision layer is just a fancy PDF reader. The decision layer is what turns extracted guidance into a comparable number so companies can be ranked. The v1 goal is a usable ranked table, not clean extraction alone. Future versions (credibility, valuation, automation) are built only if v1 proves useful.
+
 This is a screening tool, not a buy signal.
 
-Target universe: Companies with market cap ₹500 crore to ₹8,000 crore. This is where the tool has the most edge — thin institutional coverage, simpler single-business P&Ls, and guidance that maps cleanly to company-level metrics.
+Target universe: Companies with market cap ₹500 crore to ₹15,000 crore. This is where the tool has the most edge — thin institutional coverage, simpler single-business P&Ls, and guidance that maps cleanly to company-level metrics.
 
 ---
 
@@ -76,11 +78,10 @@ The filter is structural, not semantic — it asks "is this checkable?" not "is 
 - All Track B binary events (commissioning, breakeven)
 - volume_growth_pct, capex_absolute, commissioning_event, volume_value_gap_pct
 
-### How tags route to scoring
-- **Ambition (Layer 2)** consumes ALL extracted items — especially long-horizon high-growth aspirations. This is the re-rating signal that drives the investing thesis.
-- **Credibility (Layer 3)** consumes ONLY `credibility_scorable: true` items — near-term, company-level P&L guidance matched against actuals.
-
-Ambition and Credibility are separate layers fed by different statement types. Extracting only near-term items would destroy the ambition signal; extracting only long-term items would leave nothing to score credibility on. The tool needs both.
+### How tags route to scoring and the decision layer
+- **Decision layer (v1):** `level = company` items → CAGR conversion. `level = segment/geography` → Other Signals (raw text). `horizon = near` → Near CAGR block. `horizon = medium/long` → Long CAGR block. The tag schema already supports the decision layer — no schema change needed.
+- **Ambition (Layer 2):** consumes ALL extracted items — especially long-horizon high-growth aspirations. This is the re-rating signal.
+- **Credibility (Layer 3, future):** consumes ONLY `credibility_scorable: true` items — near-term, company-level P&L guidance matched against actuals.
 
 ### Extract these (examples)
 - Revenue / margin / PAT / PBT / EPS guidance with number + timeframe (ANY horizon)
@@ -96,7 +97,53 @@ Ambition and Credibility are separate layers fed by different statement types. E
 - Past-quarter explanations
 - Anything failing Gate 1 (no number/threshold, OR no date)
 
-*(This section replaces the earlier "Extraction Criteria — Critical" section, which used a flat extract/never-extract list gated purely on 4-quarter trackability. That list's examples are preserved above, now correctly split across the two gates.)*
+---
+
+## Decision Layer (v1) — From Extraction to a Rankable Number
+
+This is what makes the project useful. It converts tagged guidance into one comparable implied PAT CAGR per company, with evidence shown inline. It is deterministic Python — the LLM is never involved in arithmetic.
+
+### The v1 output (LOCKED)
+One row per company. Two horizon blocks. Two scenarios per block. Sorted by Near CAGR Base descending.
+
+| Company | Near CAGR (Base–Bull) | Long CAGR (Base–Bull) | Current P/E | Guidance Used (verbatim) | Other Signals |
+|---|---|---|---|---|---|
+
+- **Near CAGR (Base–Bull):** implied PAT CAGR from all `level = company` guidance with `horizon = near` (≤1yr). Base = lower revenue bound × current trailing net margin. Bull = upper revenue bound × upper guided net-margin bound.
+- **Long CAGR (Base–Bull):** same for `level = company` guidance with `horizon = medium/long` (>1yr), including aspirations ("3x by FYxx") annualised via the n-th root. Base = slower/conservative end. Bull = faster/guided-margin end.
+- **Current P/E:** Screener.in, manual for v1. Surfaces the mispricing gap.
+- **Guidance Used (verbatim):** every quote that produced the numbers — catches extraction errors, makes the number trustable.
+- **Other Signals:** all `level = segment/geography` items, capacity additions, order book, binary events — raw text, read by eye.
+
+### The single conversion rule (Python only — NEVER the LLM)
+```
+Future PAT = Guided Revenue × Guided Net Margin
+Implied PAT CAGR = (Future PAT / Current PAT) ^ (1 / years) − 1
+```
+Applied twice per horizon block:
+- **Base** = lower revenue bound × current trailing net margin (margins prove nothing until delivered)
+- **Bull** = upper revenue bound × upper guided net-margin bound (both delivered together)
+
+Ranges annualise via `^(1/years)`. "3x in 3–4 years" → Base 32% (4yr) to Bull 44% (3yr). Base numbers (Current Revenue, Current PAT, trailing net margin) come from Screener.in.
+
+### Why bounds, not midpoints
+Research shows the lower bound of a guidance range is more predictive of actual outcomes; simultaneously, management sandbagged the lower bound to make the target easier to beat. These two effects pull in opposite directions — collapsing to a midpoint creates one biased number. Use the bounds: lower → Base, upper → Bull. This naturally produces the scenario spread and avoids false precision.
+
+### Why two horizon blocks (not one number)
+Near-term and long-term guidance carry different trust levels and feed different parts of the thesis: near-term is the quarterly tracking checkpoint, long-term is the re-rating story. They also cross-check each other — e.g. "18–20% next year" compounded 4 years ≈ 2x, but "3x in 4 years" means growth must accelerate later. That gap is a flag: find the capacity/product/market catalyst that explains it, or discount the aspiration.
+
+### Why no bear case in v1
+A true bear case requires modeling a guidance miss — a downside event the transcript contains no data for. Building it means fabricating a number (violates the no-hallucination rule). Downside is handled by the credibility layer in future versions. v1 ships Base + Bull only.
+
+### The five accuracy rules
+1. LLM extracts and classifies only. Python does ALL arithmetic. (Primary hallucination guard.)
+2. Use bounds, never midpoints.
+3. Only `level = company` guidance enters CAGR numbers. `segment`/`geography` → Other Signals.
+4. Empty cells are valid — never interpolate or ask the LLM to estimate a number management didn't give.
+5. Verbatim evidence always shown inline.
+
+### How to use the table
+Sort by Near CAGR Base primarily. Scan Long CAGR for re-rating stories. Use P/E for cheapness. Read Other Signals for upside the numbers don't capture. A company with high Near CAGR, high Long CAGR, low P/E, and a big capacity addition in Other Signals = top research candidate.
 
 ---
 
@@ -142,13 +189,14 @@ Note: the previous ground truth structure (no horizon/level/track fields) is now
 | Layer | Choice |
 |---|---|
 | LLM API | OpenAI + Anthropic. **NOTE: gpt-4o (the originally documented extraction model) was retired in early 2026.** Current extraction candidates under evaluation: Claude Sonnet 4.6 and GPT-5.4. gpt-4o-mini-class models were previously confirmed insufficient — re-test on current models rather than carrying that conclusion forward. |
+| Decision layer | Pure Python (deterministic arithmetic — no LLM) |
 | Backend | FastAPI |
 | Database | PostgreSQL (Docker) + pgvector |
 | ORM | SQLAlchemy |
 | PDF Reading | pypdf |
 | Env Management | python-dotenv |
-| Valuation Data | Screener.in Premium export |
-| UI | Streamlit (Phase 3) |
+| Valuation Data | Screener.in Premium export (manual CSV in v1) |
+| UI | Streamlit (Phase 3); CSV / static HTML in v1 |
 | Agents | Vanilla loop first, then LangGraph |
 | Observability | Langfuse |
 
@@ -156,30 +204,44 @@ Note: the previous ground truth structure (no horizon/level/track fields) is now
 
 ## Version Strategy
 
-Three phases. Complete each version fully before moving to the next.
+Three phases. Complete each version fully before moving to the next. **Future versions are built only if v1 proves genuinely useful — if v1 does not produce a usable, motivating ranked table, the project stops there.**
 
-### PHASE 1 — AI Engineering Foundation
-- v1: Extract guidance from one transcript ✓ COMPLETE
+### PHASE 1 — AI Engineering Foundation + Usable v1 Screener
+- **v1: Extraction + Decision Layer → ranked table (THE CURRENT GOAL)**
+  - Run extraction on 20–30 real Q4 FY26 transcripts (sub-₹15,000cr), accept imperfect recall
+  - Write the deterministic conversion script (Step 6 in plan.md): filter to company-level, split by horizon, apply Base/Bull CAGR rule
+  - Fill Current Revenue / PAT / margin / P/E from Screener.in (manual CSV)
+  - Output a sorted CSV or static HTML table
+  - **Done when:** one command produces a ranked table a human can act on. Buildable in 2 days.
 - v2: Structured output + automated eval + PostgreSQL
 - v3: Multi-transcript RAG + semantic search
 
-### PHASE 2 — Screener Core
-- v4: Scoring engine (specificity + ambition)
-- v5: Credibility tracker (promise vs actual across quarters)
-- v6: Valuation integration + ranked output
+### PHASE 2 — Screener Core (only if v1 satisfies)
+- v4: Scoring engine (specificity + ambition, formalized)
+- v5: **Credibility tracker (highest-alpha layer)** — past guidance vs actuals over 4 quarters; hard gate, not just a weight
+- v6: Valuation integration + composite ranked output
 
-### PHASE 3 — Full Automation
-- v7: BSE/NSE automated pipeline (600+ companies)
-- v8: Agent + Streamlit dashboard + deployment
+### PHASE 3 — Full Automation (only if v2 satisfies)
+- v7: BSE/NSE automated pipeline (600+ companies); OCR for scanned PDFs
+- v8: Agent + Streamlit dashboard + AWS deployment
+
+### Future-version ideas (do NOT plan or build until v1 satisfies)
+- Credibility layer (highest alpha — deliverers vs over-promisers)
+- Valuation / mispricing: forward PEG = P/E ÷ implied CAGR; forward price target
+- Automated Screener.in pull (name → ticker mapping)
+- Acceleration-gap flag: auto-detect when Long CAGR implies acceleration vs Near CAGR
+- Q&A-vs-prepared-remarks tagging (Q&A guidance more predictive)
+- Tone-delta tracking QoQ (rising negativity is a strong leading signal)
+- Analyst-pushback pattern detection; uncertainty-hedging language scoring
 
 ---
 
 ## Current Status
 
-Scope redefined to the Two-Gate Model (see above). Active phase: rebuild the eval set and ground truth under the new scope, then run the model + architecture bake-off. Detailed next steps live in **plan.md** — read it alongside this file.
+**Active goal: build the usable v1 ranked screener in 2 days.** The extraction pipeline is mostly working on the 5 eval transcripts. The new work is: finish extraction cleanly, write the ~50-line deterministic conversion script (plan.md Steps 6–8), run on 20–30 real transcripts, fill Screener.in base numbers manually, and generate the ranked Base/Bull PAT CAGR table. That is the v1 definition of done.
 
 Open items to reconcile with the actual repo state (these docs may lag the working tree):
-- Confirm current eval companies (earlier docs reference Asian Paints; later sessions referenced Fineotex / Sandhar / Mold-Tek — verify which is authoritative for the new eval set).
+- Confirm current eval companies (earlier docs reference Asian Paints; later sessions referenced Fineotex / Sandhar / Mold-Tek / Sambhv — verify which is authoritative for the new eval set).
 - Confirm best prompt in use (prompt_v8 is the best-performing single-pass prompt per the historical record below; verify main.py is not loading a worse later version).
 - Update model references everywhere from the retired gpt-4o to current candidates (Sonnet 4.6 / GPT-5.4).
 
@@ -214,8 +276,8 @@ Update this section at the start of every session.
 ```
 concall-intelligence/
 ├── CLAUDE.md                  ← this file
-├── PROJECT.md                 ← full project document
-├── plan.md                    ← active phase: scope, GT rebuild, model bake-off next steps
+├── PROJECT.md                 ← full project document (v1.2)
+├── plan.md                    ← active phase: 2-day v1 build, Steps 6–8
 ├── .env                       ← real keys, gitignored
 ├── .env.example               ← key names only, committed
 ├── .gitignore
@@ -226,15 +288,17 @@ concall-intelligence/
 ├── prompts/                   ← one file per prompt version
 │   ├── prompt_v1.txt through prompt_v8.txt (v8 is current best)
 ├── notes.md                   ← decisions and future implementation notes
-├── data/                      ← ground truth and eval sets
+├── data/                      ← ground truth, eval sets, and Screener base numbers
 │   ├── asian_paints_Q4_FY26_ground_truth_v3.txt
-│   └── asian_paints_Q4_FY26_FLS.txt
+│   ├── asian_paints_Q4_FY26_FLS.txt
+│   └── screener_base.csv      ← (to be created) Current Revenue / PAT / margin / P/E per company
 ├── transcripts/               ← PDF transcripts, gitignored
 │   └── .gitkeep
+├── pipeline/                  ← stage modules (stage0_segmenter.py etc.)
 └── venv/
 ```
 
-Note: this listing is from the pre-two-gate session and may lag the actual working tree (e.g. pipeline/ stage modules, additional per-company data/ files). Verify against the repo before relying on it.
+Note: this listing may lag the actual working tree (e.g. additional pipeline/ stage modules, per-company data/ files). Verify against the repo before relying on it.
 
 ---
 
@@ -248,3 +312,6 @@ Note: this listing is from the pre-two-gate session and may lag the actual worki
 - Do not extract statements that fail Gate 1 — a number/threshold AND a date are required (falsifiable eventually)
 - Do not generate ground truth with an LLM and trust it — GT must be human-adjudicated
 - Do not write code unless explicitly asked
+- Do not let the LLM do arithmetic or estimate missing numbers — Python does all calculation in the decision layer
+- Do not fabricate a bear case — downside belongs to the credibility layer (future version)
+- Do not block v1 on perfect extraction — functional on 5 eval transcripts is enough to expand to 20–30 real transcripts
