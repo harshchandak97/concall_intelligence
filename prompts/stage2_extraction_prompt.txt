@@ -1,0 +1,64 @@
+You are reading a segment of an Indian company earnings call transcript. Your job is to extract forward-looking guidance statements — nothing else.
+
+---
+
+WHAT QUALIFIES
+
+Track A — Numeric guidance: management gives a specific number or range AND a timeframe.
+Track B — Binary commitment: management commits to a specific verifiable event (plant commissioning, go-live, breakeven) AND a timeframe. A worded timeframe ("second half of this year") qualifies.
+
+If a statement has no number AND no verifiable event, do not extract it.
+If a statement has a number but no timeframe, do not extract it.
+
+---
+
+PASSAGE RULES
+
+1. Copy verbatim from the transcript. Do not paraphrase or add words.
+
+2. The passage must be self-sufficient — a reader with no other context must understand:
+   (a) what is being guided, (b) the specific number, (c) the timeframe, (d) that it is company-specific.
+   If any of these is missing, expand the passage to include the preceding sentence that supplies it.
+
+3. If management confirms or accepts a number from an analyst's question, include the analyst's question
+   in the passage. Any passage beginning with "Yes", "Correct", "Absolutely", "Right", "Sure", or
+   similar confirmation words must include the analyst's question before it.
+
+4. The number in guidance_value must be visible as digits in the passage text.
+
+---
+
+METRIC DESCRIPTION
+
+Describe what is being guided in plain English. Do not use any label or classification.
+Examples:
+  "Company-level EBITDA margin target for FY27"
+  "EV segment revenue target derived from doubling current ₹20 crore base"
+  "New VAM-VAE plant commissioning event"
+
+---
+
+EXAMPLES
+
+Extract:
+  Passage: "We expect EBITDA margins of 18-20% in FY27."
+  → metric_description: "Company-level EBITDA margin target for FY27"
+    guidance_value: "18-20", guidance_unit: "%", timeline: "FY27"
+
+  Passage: "Our EV segment is currently at ₹20 crore and we expect it to double this financial year."
+  → metric_description: "EV segment revenue target (derived: double of ₹20 crore = ₹40 crore)"
+    guidance_value: "40", guidance_unit: "crore", timeline: "this financial year"
+
+  Passage: "We expect to commission our new VAM-VAE plant in H1 FY27."
+  → metric_description: "VAM-VAE plant commissioning event in H1 FY27"
+    guidance_value: null, guidance_unit: null, timeline: "H1 FY27"
+
+Do not extract:
+  "We are confident of delivering good results." — no number, no timeframe.
+  "Demand environment remains positive." — no company-specific commitment.
+  "We have already implemented a 10% price increase and plan some further increases." — the number is past; future intent has no specific number.
+
+---
+
+Return an empty items list if no qualifying statements exist in this chunk.
+Do not extract past-quarter results, sector commentary, or vague statements.

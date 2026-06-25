@@ -1,5 +1,7 @@
 # Concall Intelligence — Indian Equity Screener
-## Project Document v1.0
+## Project Document v1.1
+
+> v1.1 change log: Extraction scope redefined. The "trackable within 4 quarters" rule is no longer an extraction gate — it is a tag controlling automated credibility scoring only. Extraction now captures all *falsifiable-eventually* forward-looking statements (number/threshold + timeframe, any horizon), including multi-year aspirations and segment-level binary commitments. See "Extraction Criteria" below. Model references updated (gpt-4o retired). All v1.0 sections retained — see "Current Status" for the historical record.
 
 ---
 
@@ -12,7 +14,7 @@ Indian retail investors cannot efficiently find companies where management is pr
 - Almost nobody outside institutional investors reads these transcripts
 - No existing tool scans ALL concall transcripts, extracts forward-looking guidance, and cross-references it with current valuation to produce a ranked shortlist
 
-The edge: companies where management gives specific, quantifiable positive guidance but the market hasn't priced it in yet — especially in mid and small cap where institutional research coverage is thin.
+The edge: companies where management gives specific, quantifiable positive guidance — short-term OR a bullish multi-year vision — but the market hasn't priced it in yet. Aggressive long-horizon targets are the primary re-rating catalyst: when a previously slow-growing company articulates a big quantified outlook, the market starts pricing it ahead of delivery.
 
 ---
 
@@ -21,8 +23,8 @@ The edge: companies where management gives specific, quantifiable positive guida
 An automated pipeline that:
 
 1. Downloads concall transcript PDFs from BSE/NSE filings every quarter
-2. Extracts only meaningful, quantifiable forward-looking guidance using an LLM
-3. Tracks whether management delivered on past guidance (credibility scoring)
+2. Extracts only meaningful, falsifiable forward-looking guidance using an LLM
+3. Tracks whether management delivered on past near-term guidance (credibility scoring)
 4. Cross-references guidance with current valuation data
 5. Outputs a ranked list of the top 30–50 companies worth individual deep research
 
@@ -32,30 +34,44 @@ Target universe: Companies with market cap ₹500 crore to ₹8,000 crore. Small
 
 ---
 
-## Extraction Criteria — What Gets Extracted
+## Extraction Criteria — What Gets Extracted (Two-Gate Model)
 
-### Extract These (Must Be Falsifiable Within 4 Quarters)
+Handling is split into two gates. **Gate 1** = extract or not (broad, structural, industry-agnostic). **Gate 2** = tag, which routes each item to the right scoring layer. The 4-quarter and Screener-matchability constraints belong to Gate 2 ONLY — they do not restrict extraction.
 
-| Type | Example |
-|---|---|
-| Revenue guidance | "We expect ₹800–900 crore revenue in FY27" |
-| Margin guidance | "EBITDA margins to expand to 17–18% from current 13%" |
-| Order book | "Executable order book of ₹1,200 crore over 18 months" |
-| Capacity addition | "New plant commissioned in Q3, adding 40% capacity" |
-| Capex commitment | "₹250 crore capex over 2 years, ₹80 crore already deployed" |
-| Volume guidance | "We expect 8-10% volume growth going forward" |
-| Pricing guidance | "Further price increases planned, 10.5% implemented till now" |
-| Project timelines | "VAM-VAE plant commissioning in H1 FY27" |
+### Gate 1 — Extract if ALL three hold
+1. Forward-looking (future plan/target, not past-quarter explanation)
+2. Specific — a number, a threshold (e.g. EBT breakeven), or a binary outcome (e.g. plant commissioned)
+3. Has a timeframe (date, quarter, or horizon)
 
-### Ignore These (Low Signal / Not Trackable)
+**Core extraction rule — falsifiable eventually:** a statement must carry a number-or-threshold AND a date. If it can never be checked, it is noise. Horizon is irrelevant here — a 4-year aspiration that can be checked on trajectory each quarter qualifies.
 
+| Type | Example | Note |
+|---|---|---|
+| Revenue guidance | "₹800–900 crore revenue in FY27" | |
+| Margin guidance | "EBITDA margins to 17–18% from 13%" | |
+| **Multi-year aspiration** | "3x revenue by FY29" | horizon: long, credibility_scorable: false — KEY re-rating signal |
+| **Segment binary event** | "Segment X reaches EBT breakeven by Q3 FY27" | track: B, level: segment, credibility_scorable: false |
+| Order book | "Executable order book ₹1,200 crore over 18 months" | |
+| Capacity addition | "New plant commissioned in Q3, +40% capacity" | |
+| Capex commitment | "₹250 crore capex over 2 years" | |
+| Volume guidance | "8–10% volume growth going forward" | |
+| Pricing guidance | "Further price increases, 10.5% so far" | |
+| Project timelines | "VAM-VAE plant commissioning in H1 FY27" | |
+
+(The above table preserves every example from the original v1.0 extraction-criteria list — order book, capacity addition, capex, volume, pricing, project timelines — now joined by the two new categories that triggered the v1.1 scope correction: multi-year aspirations and segment binary events.)
+
+### Gate 2 — Tags
+- `horizon`: near (≤4Q) | medium (1–2Y) | long (3Y+)
+- `level`: company | segment | geography
+- `track`: A (numeric guidance) | B (binary commitment event)
+- `credibility_scorable`: true only when level=company AND metric ∈ {Revenue, EBITDA/PBDIT margin, PAT, PBT, EPS} AND horizon=near AND Screener-matchable; false otherwise.
+
+### Ignore These (fail Gate 1)
 - Macro optimism: "India's growth story remains strong"
 - Vague confidence: "We are confident of delivering good results"
 - Demand commentary without numbers: "Demand environment is positive"
 - Competitive commentary: "Competitive intensity will continue"
 - Explanations of past quarter performance
-
-**Core extraction rule:** A statement must have a number AND a timeframe, OR a specific commitment that can be checked within 12 months. If you cannot verify delivery next quarter, it is noise.
 
 ---
 
@@ -63,47 +79,40 @@ Target universe: Companies with market cap ₹500 crore to ₹8,000 crore. Small
 
 ### Layer 1: Guidance Specificity (15% weight)
 Does management give actual numbers or just vibes?
-
 - Score 1: Pure vague optimism — "we are very positive"
 - Score 3: Directional with reasoning — "margins should improve, expecting 14-16%"
 - Score 5: Fully specific — "FY27 revenue ₹800-900 crore, EBITDA 17-18%"
 
 ### Layer 2: Guidance Ambition — Implied Growth (20% weight)
-How aggressive is the guidance relative to current performance?
-
-- Compute implied growth rate: Guided figure ÷ Trailing 12-month actual
+How aggressive is the guidance relative to current performance? **This layer consumes ALL extracted items, especially long-horizon aspirations — it is the re-rating signal.**
+- Compute implied growth rate: Guided figure ÷ Trailing 12-month actual (for long-horizon, annualize: e.g. 3x in 4 years ≈ 32% CAGR)
 - Compare against sector median guided growth rate
 - A company guiding 40% growth when sector median is 12% = high ambition score
 
 ### Layer 3: Management Credibility (35% weight — MOST IMPORTANT)
-Did they deliver on what they said last quarter?
-
+Did they deliver on what they said? **This layer consumes ONLY `credibility_scorable: true` items — near-term, company-level P&L guidance.**
 - For each past guidance item: Delivery Ratio = Actual Reported / What Was Guided
 - Average across last 4 quarters
 - Ratio 0.95–1.05 → Score 5 (consistently accurate)
 - Ratio 0.80–0.95 → Score 3 (slight miss, acceptable)
 - Ratio below 0.75 → Score 1 (serial over-promiser, discard)
 
-This is the most critical filter. Indian promoter-run companies are notoriously aspirational. Without credibility filtering, the output list fills up with chronic over-promisers.
+This is the most critical filter. Indian promoter-run companies are notoriously aspirational. The Ambition layer rewards a bold "3x by FY29"; the Credibility layer is what tells you whether to believe it. A bullish vision plus a clean near-term track record is shortlist gold; the same vision from a chronic short-term misser is a discard. That contrast only works because both statement types are extracted and tagged.
 
-**Credibility scoring scope:** Automated credibility scoring is computed only on company-level revenue and EBITDA/PBDIT margin guidance, matched against Screener.in quarterly exports. Segment-level guidance (volume growth, sub-segment margins) and binary events (commissioning timelines) are extracted and tagged but excluded from automated credibility scoring — they require manual verification from subsequent transcripts.
+**Credibility scoring scope:** Automated credibility scoring is computed only on company-level revenue and EBITDA/PBDIT margin guidance, matched against Screener.in quarterly exports. Segment-level guidance (volume growth, sub-segment margins, segment breakeven) and binary events (commissioning timelines) are extracted and tagged but excluded from automated credibility scoring — they require manual verification from subsequent transcripts or BSE segment disclosures.
 
 ### Layer 4: Valuation Discount (25% weight)
 Is the stock cheap relative to the growth being guided?
-
 Forward PEG = Current PE ÷ Guided Revenue Growth Rate
-
 - PEG below 0.5 → Score 5 (very cheap for guided growth)
 - PEG 0.5–1.0 → Score 3 (fairly valued)
 - PEG above 1.5 → Score 1 (expensive relative to guidance)
 
 ### Composite Score Formula
-
 ```
 Final Score = (Specificity × 0.15) + (Ambition × 0.20) +
               (Credibility × 0.35) + (Valuation Discount × 0.25)
 ```
-
 Sort all companies descending. Top 30–50 = research shortlist.
 
 ### Bonus Signal (Add in Phase 3)
@@ -118,9 +127,9 @@ BSE/NSE Website
       ↓
 Download Concall PDFs (automated script)
       ↓
-Extract Text from PDFs (pypdf)
+Extract Text from PDFs (pypdf) → Stage 0 deterministic segmenter
       ↓
-Send to OpenAI API → Get Structured JSON (guidance data)
+Send to LLM → Get Structured JSON (guidance data, two-gate tagged)
       ↓
 Store in PostgreSQL (with pgvector for semantic search)
       ↓
@@ -137,7 +146,7 @@ Ranked Output (Streamlit dashboard)
 
 | Layer | Tool |
 |---|---|
-| LLM API | OpenAI (gpt-4o-mini for extraction, gpt-4o for scoring) |
+| LLM API | OpenAI + Anthropic. gpt-4o RETIRED (early 2026). Current extraction candidates: Claude Sonnet 4.6, GPT-5.4. Re-evaluate one-step vs two-step on current models. |
 | Backend | FastAPI |
 | Database | PostgreSQL + pgvector |
 | ORM | SQLAlchemy |
@@ -154,81 +163,38 @@ Ranked Output (Streamlit dashboard)
 
 Build in phases. Each phase ships something usable on its own. Never start the next phase until the current one is complete and committed.
 
----
-
 ### PHASE 1 — AI Engineering Foundation
 Goal: Build and validate the extraction engine. Interview-ready after this phase.
 
-#### v1 — Extract guidance from one transcript (IN PROGRESS)
+#### v1 — Extract guidance from one transcript
 - Read a PDF transcript into text
-- Write a prompt that extracts quantifiable forward-looking guidance
-- Call OpenAI API and print results
-- Compare against hand-labelled ground truth (20 statements)
-- Iterate prompt until recall ≥ 70%, precision ≥ 80%, all passages self-sufficient
-- Done when: one command runs and produces clean, self-sufficient passages
+- Write a prompt that extracts falsifiable forward-looking guidance under the two-gate model
+- Call the LLM and print results
+- Compare against hand-adjudicated ground truth
+- Iterate prompt until acceptance thresholds met (see plan.md), all passages self-sufficient
+- Done when: one command produces clean, self-sufficient, correctly-tagged passages
 
 #### v2 — Structured output + eval pipeline + PostgreSQL
-- Define Pydantic schema: company, quarter, speaker, passage, metric, value, timeline, confidence
-- Force structured JSON output from LLM
-- Build automated eval script: precision and recall calculated programmatically
+- Define Pydantic schema matching the GT structure (incl. horizon/level/track/credibility_scorable)
+- Force structured JSON output from the LLM
+- Build automated eval script: precision and recall computed programmatically
 - Save extracted records to PostgreSQL
 - Track prompt versions with scores in eval log
-- Done when: extraction runs on 3 transcripts, records land in PostgreSQL, eval script prints scores automatically
+- Done when: extraction runs on 3 transcripts, records land in PostgreSQL, eval prints scores automatically
 
 #### v3 — Multi-transcript RAG
-- Chunk transcripts by speaker turn
-- Embed chunks using OpenAI embedding model
-- Store vectors in pgvector
-- Semantic search: query across all loaded transcripts by meaning
-- Add hybrid search (semantic + keyword) and reranking
-- Evaluate retrieval separately from generation
-- Done when: "What has Asian Paints said about margins over 4 quarters?" returns correct sourced answer
-
----
+- Chunk transcripts by speaker turn; embed; store in pgvector
+- Semantic + hybrid search with reranking; retrieval evaluated separately from generation
+- Done when: "What has company X said about margins over 4 quarters?" returns correct sourced answer
 
 ### PHASE 2 — Screener Core
-Goal: Build the scoring engine and credibility tracker. Personal use starts here.
-
-#### v4 — Scoring engine
-- Implement Layer 1 (specificity) and Layer 2 (ambition) scoring
-- Normalise guidance ambition against sector median
-- Score each extracted guidance item automatically
-- Run on 5 companies you know well — sanity check output manually
-- Done when: 5 companies scored, output makes intuitive sense
-
-#### v5 — Credibility tracker (promise vs actual)
-- Match earlier guidance items against later reported results
-- Compute delivery ratio per guidance item
-- Implement Layer 3 (credibility) scoring across 4 quarters of history
-- Backfill 2–4 quarters of Asian Paints and Infosys data for testing
-- Done when: credibility score computed for at least 2 companies with real history
-
-#### v6 — Valuation integration + ranked output
-- Pull valuation data from Screener.in export (PE, market cap, sector)
-- Compute Forward PEG per company
-- Implement Layer 4 (valuation discount) scoring
-- Combine all 4 layers into composite score
-- Output ranked list as CSV or simple table
-- Done when: end-to-end score produced for 5 companies, output ranked correctly
-
----
+- v4: Scoring engine (Layer 1 specificity + Layer 2 ambition)
+- v5: Credibility tracker (Layer 3, promise vs actual across 4 quarters)
+- v6: Valuation integration + Layer 4 + composite ranked output
 
 ### PHASE 3 — Full Automation + Production
-Goal: Scale to 600+ companies, automate the pipeline, ship the dashboard.
-
-#### v7 — BSE/NSE automated pipeline
-- Script to download all concall PDFs from BSE/NSE filings each quarter
-- Handle scanned PDFs (flag as unprocessed for V1, add OCR in V2)
-- Build company name → NSE ticker mapping table (one-time, tedious but necessary)
-- Process first full quarter: target 200+ companies
-- Done when: pipeline runs overnight and processes a full quarter automatically
-
-#### v8 — Agent + Streamlit dashboard + deployment
-- Agent that orchestrates: download → extract → score → rank without manual steps
-- Streamlit dashboard: ranked table with filters by sector, market cap, score
-- Each row shows: company, guidance summary, guided growth %, PE, PEG, credibility score, final score
-- Deploy on AWS (certified — use what you know)
-- Done when: dashboard is live at a public URL, runs itself every quarter
+- v7: BSE/NSE automated download pipeline (200+ then 600+ companies; flag scanned PDFs, add OCR later)
+- v8: Agent orchestration + Streamlit dashboard + AWS deployment
 
 ---
 
@@ -236,64 +202,75 @@ Goal: Scale to 600+ companies, automate the pipeline, ship the dashboard.
 
 | When they ask | You can say |
 |---|---|
-| How do you know your AI output is good? | "I hand-labelled an eval set of 20 statements and built an automated script tracking precision and recall across every prompt version" |
+| How do you know your AI output is good? | "I hand-labelled an eval set of statements and built an automated script tracking precision and recall across every prompt version" |
 | How did you choose your extraction criteria? | "I started with all forward-looking statements, then realised untrackable ones pollute the credibility scoring — so I tightened to number + timeframe required" |
 | Tell me about your RAG setup | "Chunked by speaker turn to preserve meaning and speaker identity, hybrid search plus reranking, retrieval evaluated separately from generation" |
 | Have you built agents? | "Vanilla loop first to understand the mechanics, then LangGraph for state management" |
 | What does this project actually do? | "It scans 600+ Indian company earnings calls every quarter, extracts quantifiable management guidance, scores it on specificity, ambition, credibility and valuation, and surfaces the top 30-50 companies worth deeper research" |
 | Why does credibility scoring matter? | "Indian promoter-run companies are notoriously aspirational. Without filtering for past delivery, your output list fills with chronic over-promisers. Credibility at 35% weight is the most important filter." |
+| How did your extraction scope evolve? | "I originally gated extraction itself on a 4-quarter trackability rule. I realised that conflated two different jobs — credibility scoring needs near-term, verifiable numbers, but the actual re-rating signal I'm trying to capture is often a multi-year aspirational target. I split it into a two-gate model: a broad, industry-agnostic 'is this falsifiable eventually' extraction gate, and a separate tagging layer that routes each item to the right scoring layer — ambition vs credibility." |
+| How do you keep ground truth trustworthy? | "Ground truth is LLM-proposed but human-adjudicated. I use two strong, cross-family models to propose candidates biased toward high recall, then manually verify every item against the source PDF. I never trust LLM-generated ground truth directly — scoring a cheap model against GT built by a model in the same family just measures agreement, not correctness." |
 
 ---
 
 ## Known Hard Problems
 
 ### Segment-Level Guidance Verification
-Large and multi-segment companies guide on segment-level metrics (decorative volume growth, sub-segment margins) that cannot be reliably matched against Screener.in exports. Automated verification would require parsing the next quarter’s transcript — introducing LLM hallucination risk at the verification stage.
-Fix: Restrict automated credibility scoring to company-level revenue and EBITDA/PBDIT margin only. Segment-level guidance is extracted and tagged as credibility_scorable: false — available for human review but excluded from automated scoring. This is also why the target universe is ₹500cr–8,000cr market cap, where single-business P&Ls dominate and guidance is almost always company-level.
+Multi-segment companies guide on segment-level metrics that cannot be reliably matched against Screener.in exports.
+Fix: Restrict automated credibility scoring to company-level revenue and EBITDA/PBDIT margin. Segment-level guidance is extracted and tagged `credibility_scorable: false` — available for human review, excluded from automated scoring. This is also why the target universe is ₹500cr–8,000cr, where single-business P&Ls dominate.
 
 ### Scanned PDFs
-~10-15% of concall PDFs are scanned images. Standard text extraction fails.
-Fix for V1: Skip and flag. Add OCR (Tesseract or AWS Textract) in Phase 3.
+~10–15% of concall PDFs are scanned images. Fix for V1: skip and flag. Add OCR in Phase 3.
 
 ### LLM Hallucination
-LLM will occasionally invent a number not in the transcript.
-Fix: Spot-check 10-15 companies from output against actual transcript each quarter.
+LLM may invent a number. Fix: spot-check 10–15 companies from output against transcripts each quarter; passages must be verbatim.
 
 ### Credibility Scoring Needs History
-Layer 3 requires 2-4 quarters of historical data.
-Fix: Backfill manually for 3-5 companies before going live. System builds history automatically after that.
+Layer 3 needs 2–4 quarters of history. Fix: backfill 3–5 companies before going live.
 
 ### Company Name Matching
-Transcript says "Voltamp Transformers Ltd", Screener.in says "VOLTAMPQ".
-Fix: One-time mapping table built in Phase 3 Week 1.
+Transcript name vs Screener.in ticker. Fix: one-time mapping table in Phase 3.
 
 ---
 
 ## Cost
 
+At ~600 transcripts/quarter and ~15k input / ~1.5k output tokens per transcript, per-quarter API cost is negligible (single digits to low tens of dollars even on premium models, before batch/caching discounts). Quality, not cost, is the optimization axis at this scale.
+
 | Tool | Cost |
 |---|---|
-| OpenAI API (gpt-4o-mini) | ~$5-15 per quarter for 600 companies |
+| LLM API (current candidates) | ~$10–40 per quarter for 600 companies (lower with batch + caching) |
 | Screener.in Premium | ₹4,999/year |
 | PostgreSQL | Free (Docker local) |
 | Streamlit | Free |
 | AWS deployment | ~$5-10/month |
 
-Total ongoing: ~₹500-600/month after setup.
+Total ongoing: roughly ₹1,000–3,500/month after setup, depending on which LLM tier is chosen for production (the v1.0 estimate of ₹500-600/month assumed gpt-4o-mini pricing, which is no longer current — see Tech Stack).
 
 ---
 
 ## Current Status
 
-Phase 1, v1 — Prompt iteration in progress (prompt_v4 complete)
+Scope redefined to the two-gate model (this document, v1.1; see "Extraction Criteria" above). Active work: rebuild the eval set and ground-truth files under the new scope, then run the model + architecture bake-off. Detailed next steps are in **plan.md**.
 
-Ground truth: v3 finalised — 4 items from Asian Paints Q4 FY26, structure locked
-Best recall so far: 55% (prompt_v3)
-Best precision so far: 100% (prompt_v4)
-Best self-sufficiency: 5/8 passages (prompt_v4)
-Next action: Iterate prompt v5 targeting recall ≥ 70%
+### Historical reference — pre-two-gate status (kept for the record)
 
-Next milestone: Recall ≥ 70% + Precision ≥ 80% + all passages self-sufficient → v1 done → move to v2
+Two snapshots exist from the prior phase, at different points in the prompt-iteration arc — both preserved here rather than discarded:
+
+**Earlier snapshot (PROJECT.md v1.0):**
+- Phase 1, v1 — Prompt iteration in progress (prompt_v4 complete)
+- Ground truth: v3 finalised — 4 items from Asian Paints Q4 FY26, structure locked (pre-two-gate structure — no horizon/level/track tags)
+- Best recall so far: 55% (prompt_v3)
+- Best precision so far: 100% (prompt_v4)
+- Best self-sufficiency: 5/8 passages (prompt_v4)
+- Next action at the time: iterate prompt v5 targeting recall ≥ 70%
+- Next milestone at the time: Recall ≥ 70% + Precision ≥ 80% + all passages self-sufficient → v1 done → move to v2
+
+**Later snapshot (CLAUDE.md, same arc, v1 subsequently completed):**
+- Prompt iteration continued through prompt_v8 (9 runs total); final recall 75%, final precision 67%, on the same 4-item Asian Paints v3 ground truth
+- Full detail in CLAUDE.md → Current Status → "Historical reference — Phase 1, v1 outcome"
+
+Neither snapshot is directly comparable to upcoming eval runs — the ground truth structure and extraction scope have both changed (two-gate model, horizon/level/track tags added). They're retained as a record of how the prompt evolved, not as a current benchmark.
 
 ---
 
