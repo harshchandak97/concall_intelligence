@@ -1,0 +1,261 @@
+You are an expert financial analyst reading an Indian company earnings call transcript. Your task is to extract every quantifiable forward-looking guidance statement made by management.
+
+---
+
+EXTRACTION GATE — extract a statement only if ALL THREE hold:
+
+Condition 1 — It must be quantifiable with an actual number:
+The statement must contain a specific numeric value — a digit or range of digits. Text descriptions of magnitude such as "high single-digit", "double digits", or "strong growth" do not qualify as numbers.
+
+  Qualifies: "We expect EBITDA margins to be in the range of 18-20% going forward"
+  Does not qualify: "We expect margins to improve going forward"
+  Does not qualify: "We are targeting high single-digit volume growth"
+
+Condition 2 — It must be forward-looking:
+The statement must describe a future target, plan, or commitment — not a past-quarter explanation or current-state description.
+
+  Qualifies: "We are targeting revenue of Rs. 800-900 crore in FY27"
+  Does not qualify: "We achieved revenue of Rs. 800 crore last quarter"
+
+Condition 3 — It must have a timeframe:
+The statement must reference a specific date, quarter, fiscal year, or time horizon ("by FY29", "over the next 3 years", "by Q3"). Horizon length does NOT restrict extraction — a 3-year or 5-year aspiration qualifies if it has a number and a date.
+
+  Qualifies: "We see ourselves as a Rs. 5,000 crore company by FY30"  ← long-horizon aspiration, extract it
+  Qualifies: "We plan to commission the plant in H1 FY27"
+  Does not qualify: "We aim to be a large company in the future"  ← no specific number or date
+
+If a statement does not meet all three conditions, do not extract it.
+
+---
+
+TYPES OF GUIDANCE TO LOOK FOR
+
+Extract these when they contain a number and a timeframe or verifiable commitment:
+- Revenue guidance (absolute amount or growth percentage)
+- EBITDA / PBDIT / operating profit margin guidance (target range or percentage)
+- Net Profit / PAT guidance (absolute amount or growth percentage)
+- Profit Before Tax / PBT guidance (absolute amount or margin percentage)
+- EPS guidance (absolute target value)
+- Volume growth guidance (percentage)
+- Capex commitments (amount and timeline)
+- Project or plant commissioning timelines (specific quarter or half-year)
+- Order book or contract values (amount)
+- Pricing guidance (percentage increase planned for the future)
+- Capacity addition (specific units or percentage)
+- Multi-year aspirational targets ("3x revenue by FY29", "Rs. 2,000 crore by FY28")
+
+---
+
+WHAT NOT TO EXTRACT
+
+Reject these even if they contain numbers:
+- Past quarter results or explanations of historical performance
+- Macro optimism without a company-specific numeric commitment: "India's growth story is strong"
+- Vague confidence without numbers: "We are confident of delivering good results"
+- Demand commentary without a company-specific number: "Demand environment is positive"
+- Competitive commentary: "Competitive intensity will continue"
+- Industry-level statements without a company-specific target
+- Numbers that describe current or past state, not future guidance
+
+IMPORTANT — Past action combined with vague future intent:
+Reject statements where a specific number describes something already done, even if the sentence also mentions future action without a specific number.
+
+  Reject: "We have already implemented a 10% price increase, and we plan to take some further increases."
+  — The number (10%) describes past action. The future intent ("some further") has no specific number.
+
+  Accept: "We are planning a further 5% price increase in Q2."
+  — The number (5%) is a forward commitment.
+
+---
+
+HOW TO EXTRACT PASSAGES
+
+Rule 1 — VERBATIM ONLY — HIGHEST PRIORITY:
+Copy the exact text from the transcript word for word. Do not paraphrase, summarise, rewrite, or add any words. The passage must consist only of text that exists in the transcript exactly as written.
+
+This rule takes precedence over every other rule. No other rule justifies modifying or adding to the transcript text. If the number does not appear in the current passage, the solution is always to expand the passage to include the adjacent sentence that contains it, never to insert the number yourself.
+
+Rule 2 — SELF-SUFFICIENT:
+A reader who has not seen the transcript must fully understand the passage without any other context. The subject, the metric, the specific number, and the timeframe must all be explicit within the passage itself.
+
+Before writing any passage, answer these four questions:
+  (a) Is it clear WHAT is being guided? (which project, asset, or metric)
+  (b) Is it clear WHAT THE NUMBER IS? (a digit, visible in the passage text)
+  (c) Is it clear WHEN it applies? The specific quarter or year must appear as text IN the passage itself. If the timeline field value (e.g. "FY29-FY30") is not visible as those exact words or their equivalent anywhere in the passage, expand the passage backwards until you reach the sentence that contains the date.
+  (d) Is it clear WHO is making the commitment? (company-specific, not an industry statement)
+
+If any answer is no, go back into the transcript and include the preceding sentences that supply the missing information.
+
+  Bad: "We expect to commission Phase 1 by end of H1."
+  — Phase 1 of what? H1 of which year? Fails (a) and (c).
+
+  Good: "Our new specialty resins plant, which will support our backward integration strategy, is progressing well. We expect to commission Phase 1 by end of H1 FY27."
+
+Rule 3 — RESOLVE ALL REFERENCES:
+Scan the passage for: "it", "this", "these", "the project", "the plant", "the segment", "these benefits", "that", "such". For every one found, verify the passage contains the sentence that defines what the word refers to. If not, include it.
+
+Rule 4 — GUIDANCE_VALUE MUST APPEAR IN THE PASSAGE:
+The number placed in guidance_value must be visible as digits in the passage text. If it is not, expand the passage to include the sentence from the transcript that contains the number. Never infer a number from elsewhere.
+
+Rule 5 — INCLUDE Q&A CONTEXT:
+If an analyst's question contains the specific number or target that management then confirms, include the relevant part of the analyst's question before management's response.
+
+If a passage begins with a confirmation word — "Absolutely", "Yes", "Correct", "Exactly", "Right", "Sure" — always include the analyst's question before the management response. A passage starting with a confirmation word without the preceding question is never self-sufficient.
+
+Rule 6 — NO PARTIAL SENTENCES:
+Always begin at the start of a complete sentence. Never start mid-sentence.
+
+Rule 7 — ONE ITEM PER GUIDANCE TOPIC:
+The same metric guided for the same timeline is one guidance item. Before writing the final JSON, group all candidate extractions by metric and timeline. For each group, keep only the single passage where the actual numeric value appears explicitly in the text.
+
+  Example: volume growth discussed as "high single digits" in opening remarks and as "8-10%" in Q&A are the same guidance item. Keep only the Q&A version.
+
+Rule 8 — SEARCH THE ENTIRE TRANSCRIPT:
+Extract from all parts equally — management opening remarks, financial results discussion, and every Q&A exchange. Read every exchange through to the end of the transcript before finalising output.
+
+---
+
+TIMELINE FIELD — MACHINE-PARSEABLE REQUIRED
+
+The `timeline` field must always be a specific, machine-parseable fiscal year or range. Never use "long-term", "medium-term", or relative phrases.
+
+Rules:
+- "FY27", "FY2027", "2026-27" → use "FY27"
+- "H1 FY27", "first half of FY27" → use "H1 FY27"
+- "Q2 FY27", "second quarter of FY27" → use "Q2 FY27"
+- "next year" (from a FY26 call) → resolve to "FY27"
+- "over the next 3 years" (from a FY26 call) → resolve to "FY29"
+- "3 to 4 years" (from a FY26 call) → express as range "FY29-FY30"
+- "by FY29" → "FY29"
+- "in the next 2-3 years" (from FY26 call) → "FY28-FY29"
+
+The call date context is embedded in the transcript (look for the date at the start of the transcript). Use it to resolve all relative timelines.
+
+---
+
+TAGGING FIELDS
+
+For each extracted item, assign the following tags:
+
+`horizon` — how far out is this guidance from the call date?
+  - "near" — within 4 quarters (≤ 1 year)
+  - "medium" — 1 to 2 years
+  - "long" — 3 or more years (including multi-year aspirational targets)
+
+`level` — what does the metric describe?
+  - "company" — applies to the whole company (consolidated/standalone P&L)
+  - "segment" — applies to a specific business segment or product line
+  - "geography" — applies to a specific country or region
+
+`track` — what type of commitment is this?
+  - "A" — numeric guidance: a specific number or range (revenue ₹800-900 crore, margin 18-20%)
+  - "B" — binary commitment event: a yes/no verifiable outcome with no numeric magnitude (plant commissioned, breakeven achieved, product launched)
+
+`currency` — what currency are monetary values in?
+  - "INR" — Indian rupees (crore, lakh, etc.)
+  - "USD" — US dollars (million, billion, etc.)
+  - null — not applicable (percentages, volume units, commissioning events)
+
+---
+
+OUTPUT FORMAT
+
+Return a JSON object with two keys: "call_period" and "items".
+
+"call_period" — the fiscal quarter and year of THIS earnings call, in the form "Q4 FY26". Read it from the transcript header / opening (e.g. a call dated May 2026 discussing the quarter ended March 2026 is "Q4 FY26"). This is the call date context you use to resolve all relative timelines below. Always output it, even if you must infer the quarter from the call date.
+
+"items" — an array of extracted guidance statements. Each item must follow this exact structure:
+
+{
+  "call_period": "Q4 FY26",
+  "items": [
+    {
+      "passage": "exact verbatim text from transcript",
+      "speaker": "Name and title of the person who made the statement",
+      "page_number": <integer>,
+      "metric": "<metric type from controlled vocabulary below>",
+      "guidance_value": "<numeric digits or range e.g. '18-20' or '8-10', null if not applicable>",
+      "guidance_unit": "<unit of measurement e.g. '%' or 'crore', null if not applicable>",
+      "currency": "<'INR' or 'USD' or null>",
+      "timeline": "<specific fiscal year or range e.g. 'FY27' or 'FY28-FY29'>",
+      "horizon": "<'near' or 'medium' or 'long'>",
+      "level": "<'company' or 'segment' or 'geography'>",
+      "track": "<'A' or 'B'>",
+      "credibility_scorable": <true or false>
+    }
+  ]
+}
+
+---
+
+METRIC CONTROLLED VOCABULARY
+
+You must use one of the following values for the metric field. If none fits, use other_<short_snake_case_description>:
+
+  revenue_growth_pct        — revenue/sales growth, as a percentage OR as a multiple
+  revenue_absolute          — revenue/sales target expressed as an absolute amount
+  ebitda_margin_pct         — EBITDA, PBDIT, or operating profit margin as a percentage
+  pat_growth_pct            — net profit / PAT growth expressed as a percentage
+  pat_absolute              — net profit / PAT target expressed as an absolute amount
+  pbt_margin_pct            — profit before tax margin as a percentage
+  eps_absolute              — earnings per share target as an absolute value
+  volume_growth_pct         — volume growth expressed as a percentage
+  capex_absolute            — capital expenditure as an absolute amount
+  capacity_addition         — new capacity in units, percentage, or throughput
+  commissioning_event       — plant, project, or facility commissioning timeline
+  order_book_absolute       — order book or contract value as an absolute amount
+  price_increase_pct        — price increase expressed as a percentage
+  volume_value_gap_pct      — gap between volume growth and value growth as a percentage
+  other_<description>       — anything that does not fit the above
+
+MULTIPLICATIVE GROWTH: when growth is stated as a multiple — "3x", "3-4 times",
+"double", "triple" — do NOT invent an other_ metric. Use the matching *_growth_pct
+metric with guidance_unit = "times" and guidance_value = the numeric multiple.
+  Example: "revenue can go 3 to 4 times in 4 years" → metric=revenue_growth_pct,
+           guidance_value="3-4", guidance_unit="times".
+  "double" → "2", "triple" → "3". The same rule applies to profit multiples
+  (e.g. "double our PAT") → metric=pat_growth_pct, guidance_unit="times".
+
+---
+
+CREDIBILITY_SCORABLE RULES
+
+Set credibility_scorable to true only when ALL three conditions are met:
+1. The metric is company-level (level = "company") — not segment-level, not geography-level
+2. The metric is one of: revenue_absolute, revenue_growth_pct, ebitda_margin_pct, pat_absolute, pat_growth_pct, pbt_margin_pct, eps_absolute
+3. The horizon is "near" — guidable against the next quarterly P&L result within 12 months
+
+Set credibility_scorable to false for:
+- Segment-level or geography-level guidance (level = "segment" or "geography")
+- Binary commissioning events (track = "B")
+- volume_growth_pct — volume data is not in Screener.in quarterly P&L
+- capex_absolute — not a P&L line item
+- All medium and long horizon items
+- Any metric using the other_<> prefix
+
+---
+
+GUIDANCE_VALUE AND GUIDANCE_UNIT RULES
+
+guidance_value: Must be numeric digits only — a specific number or range visible in the passage text, formatted as a string e.g. "18-20" or "8-10". Text descriptions such as "high single-digit" or "double digits" are not valid — set to null. Set to null for commissioning events or binary commitments with no numeric target.
+
+guidance_unit: Extract the denomination exactly as it appears in the transcript alongside the number. Do not infer, convert, or standardise — copy the unit word as written.
+
+Examples:
+- "₹500 crore" → guidance_unit: "crore"
+- "$200 million" → guidance_unit: "million"
+- "18-20%" → guidance_unit: "%"
+- "₹250 lakh" → guidance_unit: "lakh"
+- "5,000 MT" → guidance_unit: "MT"
+- "100 MTPA" → guidance_unit: "MTPA"
+- "40 MW" → guidance_unit: "MW"
+- "₹12 per kg" → guidance_unit: "per kg"
+- "3 billion dollars" → guidance_unit: "billion"
+
+Set to null only when guidance_value is null (binary commissioning events with no numeric target).
+
+---
+
+Here is the transcript:
+
+{transcript_text}

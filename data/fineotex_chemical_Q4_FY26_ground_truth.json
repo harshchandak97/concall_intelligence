@@ -1,0 +1,92 @@
+{
+  "company": "Fineotex Chemical",
+  "quarter": "Q4 FY26",
+  "call_period": "Q4 FY26",
+  "_gt_provenance": "TRANSCRIPT-VERIFIED Pass 2 (Opus 4.8 read transcripts/fineotex_chemical_Q4_FY26.pdf, call held 18-May-2026). Pass 1 union: opus (14) + gpt (17). Result: 6 kept. Change vs candidate-only Pass 2 (which kept 5): ADDED the CCT 15% EBITDA item — on reading the source, its FY28 timeline IS derivable from the analyst's own question ($200M-by-FY28 scale-up), so the passage was widened to include that question and the item now passes Gate 1. Confirmed drops against source: capacity-doubling 'in process' (no completion date anywhere); analyst-proposed INR1200-1250cr/INR175-185cr (management explicitly deflected: 'Q4 numbers are the base'); CrudeChem INR600-650cr ('Yes, easily' — accepted but 'steady state' has no derivable date); $7M capex (already-done + undated); 5x wallet share ('I'm just saying hypothetically'); working-capital <90d (comfort threshold). The 5 previously-kept items are all verbatim-accurate with correct timelines.",
+  "items": [
+    {
+      "passage": "I think easily, we should be looking at touching a business of $200 million with the new investment we are going to do in the machineries. Earlier, our expectation to touch $200 million was something in 2030. However, I think that should not take so long now. It should be definitely before 2028.",
+      "speaker": "Sanjay Tibrewala, CFO",
+      "page_number": 6,
+      "metric": "revenue_absolute",
+      "guidance_value": "200",
+      "guidance_unit": "million",
+      "currency": "USD",
+      "timeline": "FY28",
+      "horizon": "medium",
+      "level": "segment",
+      "track": "A",
+      "credibility_scorable": false
+    },
+    {
+      "passage": "Amit Mehendale: My first question is on our US acquisition of CCT. Are we expecting $200 million of revenue in FY '28? [...] And also, what type of EBITDA are we looking at in terms of EBITDA percentage as we scale up the business? Sanjay Tibrewala: [...] So going forward, I think comfortably, we should be at EBITDA of 15% more or less.",
+      "speaker": "Sanjay Tibrewala, CFO",
+      "page_number": 5,
+      "metric": "ebitda_margin_pct",
+      "guidance_value": "15",
+      "guidance_unit": "%",
+      "currency": null,
+      "timeline": "FY28",
+      "horizon": "medium",
+      "level": "segment",
+      "track": "A",
+      "credibility_scorable": false
+    },
+    {
+      "passage": "Vinay Nadkarni: Great. I think it's a great acquisition. Just one last question for you. When you said 18% to 20% of blended EBITDA going forward, would that be in F '27 or would you look at that as F '28? Sanjay Tibrewala: We are trying our best to make it as soon as – as quickly as possible, but I think this can be reflecting even in this financial year. So, I won't be surprised rather on that.",
+      "speaker": "Sanjay Tibrewala, CFO",
+      "page_number": 14,
+      "metric": "ebitda_margin_pct",
+      "guidance_value": "18-20",
+      "guidance_unit": "%",
+      "currency": null,
+      "timeline": "FY27",
+      "horizon": "near",
+      "level": "company",
+      "track": "A",
+      "credibility_scorable": true
+    },
+    {
+      "passage": "Coming to your different question about the stake. So, yes, we have already signed with the founders that further 25% has to be sold by them to Finotech's in January '28. It's part of the agreement. So that's about it. So that is going to add us to almost 79% or 80%.",
+      "speaker": "Sanjay Tibrewala, CFO",
+      "page_number": 11,
+      "metric": "other_stake_increase",
+      "guidance_value": "25",
+      "guidance_unit": "%",
+      "currency": null,
+      "timeline": "FY28",
+      "horizon": "medium",
+      "level": "segment",
+      "track": "B",
+      "credibility_scorable": false
+    },
+    {
+      "passage": "Going forward, I think with Fineotex organic growth, the kind of -- last year, we had a new plant investment in India, which is in Ambernath, plus we have the CCT now with us. I don't feel a challenge that it can go another 3, 4 times in the next 4 years or something like that. So this is something which is within the range. And I think we will be looking at it.",
+      "speaker": "Sanjay Tibrewala, CFO",
+      "page_number": 15,
+      "metric": "revenue_growth_pct",
+      "guidance_value": "3-4",
+      "guidance_unit": "times",
+      "currency": null,
+      "timeline": "FY30",
+      "horizon": "long",
+      "level": "company",
+      "track": "A",
+      "credibility_scorable": false
+    },
+    {
+      "passage": "Nalin Shah: You said it could be 3 to 4 times from the present. So can we assume -- I mean, very, very reasonably speaking, that in 3 to 4 years' time, we could be a INR3,000 crores top line company from here? Sanjay Tibrewala: Oh yes. That if the way the things are going on, I would not be at all surprised if we don't -- I mean, touching that number will -- I mean, I will be rather surprised if we don't touch it.",
+      "speaker": "Sanjay Tibrewala, CFO",
+      "page_number": 16,
+      "metric": "revenue_absolute",
+      "guidance_value": "3000",
+      "guidance_unit": "crore",
+      "currency": "INR",
+      "timeline": "FY29-FY30",
+      "horizon": "long",
+      "level": "company",
+      "track": "A",
+      "credibility_scorable": false
+    }
+  ]
+}

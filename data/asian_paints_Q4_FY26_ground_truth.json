@@ -1,0 +1,78 @@
+{
+  "company": "Asian Paints",
+  "quarter": "Q4 FY26",
+  "call_period": "Q4 FY26",
+  "_gt_provenance": "TRANSCRIPT-VERIFIED Pass 2 (Opus 4.8 read transcripts/asian_paints_Q4_FY26.pdf, call held 29-May-2026). Pass 1 union: opus (8) + gpt (16). Result: 5 kept — UNCHANGED vs candidate-only Pass 2; all 5 verbatim-confirmed with correct timelines. Drops confirmed against source: price_increase 10.5-11% (already taken; 'some more price increases' has no number/date), ESG 2030 targets (no spoken numbers, slide-only, non-P&L), industrial/international 'grow higher' and pipeline-stock-up (no number/threshold), <=100bps contraction (Percy Panthaki proposed it; Amit Syngle did NOT confirm — 'the endeavour is definitely that you try to remain in the margin band given'), 'high single-digit' volume (the quantified 8-10% version is kept instead). Cross-source dedup of the VAM-VAE, margin, volume, and volume-value-gap statements.",
+  "items": [
+    {
+      "passage": "The area of VAM-VAE, which is our backward integration project, is something which we are looking forward to strongly. Today, worldwide, there are very limited players who are making VAM-VAE, and for us, it is a signature project and we expect to commission first phase in the first half of this year.",
+      "speaker": "Amit Syngle, MD & CEO",
+      "page_number": 11,
+      "metric": "commissioning_event",
+      "guidance_value": null,
+      "guidance_unit": null,
+      "currency": null,
+      "timeline": "H1 FY27",
+      "horizon": "near",
+      "level": "company",
+      "track": "B",
+      "credibility_scorable": false
+    },
+    {
+      "passage": "Also, the fact that what we are commissioning in this first half is only the VAE part, the entire VAM-VAE project as such will still take some time, and that is when we will start realizing the whole anticipated benefits. We will have to phase it out over the next one and a half to two years.",
+      "speaker": "Parag Rane, AVP – Finance",
+      "page_number": 24,
+      "metric": "commissioning_event",
+      "guidance_value": null,
+      "guidance_unit": null,
+      "currency": null,
+      "timeline": "FY28",
+      "horizon": "medium",
+      "level": "company",
+      "track": "B",
+      "credibility_scorable": false
+    },
+    {
+      "passage": "Just to understand clearly that in doing so, you would like to maintain your margin guidance, which has always been 18-20%, there is a high single-digit volume ambition as well for the year. I assume when you say high single-digit, you mean FY27. [...] Absolutely right. We are maintaining our margin guidance, which is there.",
+      "speaker": "Amit Syngle, MD & CEO (accepting analyst Amit Sachdeva's framing)",
+      "page_number": 22,
+      "metric": "ebitda_margin_pct",
+      "guidance_value": "18-20",
+      "guidance_unit": "%",
+      "currency": null,
+      "timeline": "FY27",
+      "horizon": "near",
+      "level": "company",
+      "track": "A",
+      "credibility_scorable": true
+    },
+    {
+      "passage": "So, while there could be a little bit of upstocking, which could happen because of the price increases, we are still confident that demand conditions should continue giving us closer to high single-digit volume growth in the band of about 8-10%, as we predict going forward.",
+      "speaker": "Amit Syngle, MD & CEO",
+      "page_number": 20,
+      "metric": "volume_growth_pct",
+      "guidance_value": "8-10",
+      "guidance_unit": "%",
+      "currency": null,
+      "timeline": "FY27",
+      "horizon": "near",
+      "level": "company",
+      "track": "A",
+      "credibility_scorable": false
+    },
+    {
+      "passage": "And we feel that over a period of time, it is good to maintain that 3-4% gap, which would remain from a point of view of overall direction between volume and value.",
+      "speaker": "Amit Syngle, MD & CEO",
+      "page_number": 25,
+      "metric": "volume_value_gap_pct",
+      "guidance_value": "3-4",
+      "guidance_unit": "%",
+      "currency": null,
+      "timeline": "FY27",
+      "horizon": "near",
+      "level": "company",
+      "track": "A",
+      "credibility_scorable": false
+    }
+  ]
+}

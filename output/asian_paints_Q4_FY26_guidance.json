@@ -1,0 +1,75 @@
+{
+  "call_period": "Q4 FY26",
+  "items": [
+    {
+      "passage": "Parag Rane: Also, the fact that what we are commissioning in this first half is only the VAE part, the entire VAM-VAE project as such will still take some time, and that is when we will start realizing the whole anticipated benefits. We will have to phase it out over the next one and a half to two years.",
+      "speaker": "Parag Rane : AVP – Finance",
+      "page_number": 25,
+      "metric": "commissioning_event",
+      "guidance_value": null,
+      "guidance_unit": null,
+      "currency": null,
+      "timeline": "H1 FY27",
+      "horizon": "near",
+      "level": "company",
+      "track": "B",
+      "credibility_scorable": false
+    },
+    {
+      "passage": "So, while there could be a little bit of upstocking, which could happen because of the price increases, we are still confident that demand conditions should continue giving us closer to high single-digit volume growth in the band of about 8 -10%, as we predict going forward.",
+      "speaker": "Amit Syngle : MD & CEO",
+      "page_number": 21,
+      "metric": "volume_growth_pct",
+      "guidance_value": "8-10",
+      "guidance_unit": "%",
+      "currency": null,
+      "timeline": "FY27",
+      "horizon": "near",
+      "level": "company",
+      "track": "A",
+      "credibility_scorable": false
+    },
+    {
+      "passage": "Amit Sachdeva: Just to understand clearly that in doing so, you would like to maintain your margin guidance, which has always been 18-20%, there is a high single-digit volume ambition as well for the year. I assume when you say high single-digit, you mean FY27. And also the pricing whatever will build up on top of it. Is this a way to interpret what you are saying?\nAmit Syngle: Absolutely right. We are maintaining our margin guidance, which is there. We are looking at the price increases that are happening and trying to see that we get into that area of 8-10% volume growth.",
+      "speaker": "Amit Syngle : MD & CEO",
+      "page_number": 23,
+      "metric": "ebitda_margin_pct",
+      "guidance_value": "18-20",
+      "guidance_unit": "%",
+      "currency": null,
+      "timeline": "FY27",
+      "horizon": "near",
+      "level": "company",
+      "track": "A",
+      "credibility_scorable": true
+    },
+    {
+      "passage": "Parag Rane: Also, the fact that what we are commissioning in this first half is only the VAE part, the entire VAM-VAE project as such will still take some time, and that is when we will start realizing the whole anticipated benefits. We will have to phase it out over the next one and a half to two years.",
+      "speaker": "Parag Rane : AVP – Finance",
+      "page_number": 25,
+      "metric": "other_benefits_realization_timeline",
+      "guidance_value": "1.5-2",
+      "guidance_unit": "years",
+      "currency": null,
+      "timeline": "FY28-FY29",
+      "horizon": "medium",
+      "level": "company",
+      "track": "A",
+      "credibility_scorable": false
+    },
+    {
+      "passage": "Amit Syngle: Yes, because the price increases might not be at a regular interval. But, we think that this trajectory of 3-4% will remain as we go ahead.",
+      "speaker": "Amit Syngle : MD & CEO",
+      "page_number": 26,
+      "metric": "volume_value_gap_pct",
+      "guidance_value": "3-4",
+      "guidance_unit": "%",
+      "currency": null,
+      "timeline": "FY27",
+      "horizon": "near",
+      "level": "company",
+      "track": "A",
+      "credibility_scorable": false
+    }
+  ]
+}

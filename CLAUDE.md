@@ -176,9 +176,16 @@ Every ground truth item and every LLM output item uses this exact structure:
 - All Track B binary events (commissioning, breakeven)
 - volume_growth_pct, capex_absolute, commissioning_event, volume_value_gap_pct
 
-Ground truth is the answer key for the EVAL SET only (~8–15 transcripts across sectors), not for all 600 production transcripts. GT files are LLM-proposed and HUMAN-adjudicated (never LLM-generated and trusted). See plan.md for the GT build process.
+Ground truth is the answer key for the EVAL SET only (~8–15 transcripts across sectors), not for all 600 production transcripts. See plan.md for the GT build process.
 
-GT file naming: `data/{company}_{quarter}_ground_truth_v{n}.txt`
+**GT build process (v1 — LLM-only, no human adjudication).** DELIBERATE DEVIATION from the original "must be human-adjudicated" rule, chosen by the owner to remove the human bottleneck:
+- **Pass 1 (high recall):** `prompts/gt_proposal_prompt.md` run on strong cross-family proposers (Opus 4.8 + GPT) → over-proposed candidates in `data/ground_truth_reference/{company}_{quarter}_gt_candidates_{opus,gpt}.json`.
+- **Pass 2 (judge + classify):** `prompts/gt_judge_prompt.md` applied by Opus 4.8 — keeps/drops each candidate under Gate 1, dedups, finalises Gate-2 tags → `data/{company}_{quarter}_ground_truth.json` in the `{"items": [...]}` schema.
+- **Scoring:** `eval_v2.py --gt <gt.json> --extraction output/{company}_guidance.json` → strict/soft precision/recall + per-tag agreement.
+
+Consequence: the eval measures "agreement with a strong two-pass model," NOT human truth — a reproducible signal for tracking prompt iterations, not an absolute correctness guarantee. First run (Sandhar Q4 FY26): strict 44% recall / 41% precision; soft 75% / 71%.
+
+GT file naming: `data/{company}_{quarter}_ground_truth.json` (Pass-2 output). Older hand-built GT used `_ground_truth_v{n}.txt`.
 
 Note: the previous ground truth structure (no horizon/level/track fields) is now superseded. Existing GT files built under the old structure (e.g. asian_paints_Q4_FY26_ground_truth_v3.txt) will need re-tagging or re-versioning to the new structure before reuse in an eval run — see plan.md Step 2.
 
@@ -310,7 +317,7 @@ Note: this listing may lag the actual working tree (e.g. additional pipeline/ st
 - Do not build multiple versions simultaneously — finish one, commit, then move
 - Do not treat "4 quarters" as an extraction gate — it is a tag (see Two-Gate Model)
 - Do not extract statements that fail Gate 1 — a number/threshold AND a date are required (falsifiable eventually)
-- Do not generate ground truth with an LLM and trust it — GT must be human-adjudicated
+- Ground truth for v1 is LLM-generated via the two-pass process above (Pass 1 propose → Pass 2 Opus 4.8 judge), with NO human adjudication — a deliberate owner decision; treat the eval as model-agreement, not absolute truth (see Ground Truth Structure)
 - Do not write code unless explicitly asked
 - Do not let the LLM do arithmetic or estimate missing numbers — Python does all calculation in the decision layer
 - Do not fabricate a bear case — downside belongs to the credibility layer (future version)
