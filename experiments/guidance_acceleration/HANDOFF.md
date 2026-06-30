@@ -83,7 +83,11 @@ overlap div=0.0%, PAT≈₹0cr → CAGR undefined but correctly labelled).
   - prior_source + overlap_div_pct in CSV and per-company evidence
 - **`recover_covers.py`** — rewritten to multi-pass: BSE alternates (Apr–Sep 2024 window)
   → link-letter URL extraction from cover PDF → give up.
-- **`extract_cheap.py`** — unchanged; use `--all --batch --model gpt-5.4` for the full run.
+- **`extract_cheap.py`** — batch-ready full extraction. Use `--all --batch --model gpt-5.4`
+  for the log-defined usable universe, or `--all-files --batch --model gpt-5.4`
+  to process every top-level PDF currently present in `transcripts/`. It writes
+  local Batch JSONL + manifest files under `extractions/batch/`, supports `--dry-run`,
+  `--status`, and collects raw output/error/usage summaries for cache auditing.
 
 ---
 
@@ -156,15 +160,30 @@ Recommended: run on 652 now, don't block the batch on 42 edge cases.
 ### Step C — Submit the full extraction batch
 ```
 cd experiments/guidance_acceleration
+python extract_cheap.py --all --dry-run --model gpt-5.4 --out-name gpt54_full
 python extract_cheap.py --all --batch --model gpt-5.4 --out-name gpt54_full
 ```
 This submits ~652 transcripts to OpenAI Batch API (50% off). Note the batch ID printed —
 needed for `--collect` when status=completed (typically 1-24 hours).
 
+If you want literally every top-level PDF in `transcripts/`, including recovered files
+whose `download_log.csv` status may still be stale, use:
+```
+python extract_cheap.py --all-files --dry-run --model gpt-5.4 --out-name gpt54_all_files
+python extract_cheap.py --all-files --batch --model gpt-5.4 --out-name gpt54_all_files
+```
+
+Check progress without downloading:
+```
+python extract_cheap.py --status <batch_id>
+```
+
 ### Step D — Collect batch results
 ```
 python extract_cheap.py --collect <batch_id> --out-name gpt54_full
 ```
+Collection writes parsed JSON to `extractions/<out-name>/`, plus raw output,
+error output if any, and token/cache usage summary under `extractions/batch/`.
 
 ### Step E — Run score.py on full results
 ```
@@ -198,7 +217,9 @@ python lib_fx.py
 python score.py --candidate gpt54_scope          # 6-company test; --refresh to bust cache
 
 # full pipeline
+python extract_cheap.py --all --dry-run --model gpt-5.4 --out-name gpt54_full
 python extract_cheap.py --all --batch --model gpt-5.4 --out-name gpt54_full
+python extract_cheap.py --status <batch_id>
 python extract_cheap.py --collect <batch_id> --out-name gpt54_full
 python score.py --candidate gpt54_full
 ```

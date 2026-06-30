@@ -28,6 +28,7 @@ listed names. The result is identical either way.
 | `build_universe.py` | Step 1–2 → `universe_with_concalls.csv` (+ `universe_unresolved.csv`). |
 | `download_concalls.py` | Step 4 → `transcripts/*.pdf` (+ `download_log.csv`). Batch summaries, inline ❌/⚠ flags, final failures block; `--skip-existing` to resume. |
 | `recover_covers.py` | Second pass: re-fetches the correct transcript for any `<5p` COVER? PDF (some companies file a cover/audio stub alongside the real transcript) → `recover_log.csv`. |
+| `extract_cheap.py` | Batch-ready OpenAI extraction for the PAT-CAGR driver fields. Builds Batch JSONL + manifest, submits, checks status, collects parsed results, and writes cache/token usage summaries. |
 | `universe_all.csv` | Every concall company (827) + current market cap + status (`kept` / `over_cap` / `unresolved`) — lets you re-pick the cap later without re-fetching. |
 
 ## Usage
@@ -47,6 +48,17 @@ python download_concalls.py --skip-existing
 
 # recover any 1-page COVER? PDFs from alternate BSE filings
 python recover_covers.py
+
+# build and inspect a Batch API request file without spending API money
+python extract_cheap.py --all --dry-run --model gpt-5.4 --out-name gpt54_full
+
+# submit the full usable-transcript extraction batch, then poll and collect
+python extract_cheap.py --all --batch --model gpt-5.4 --out-name gpt54_full
+python extract_cheap.py --status <batch_id>
+python extract_cheap.py --collect <batch_id>
+
+# if download_log.csv is stale and you want every top-level PDF on disk
+python extract_cheap.py --all-files --batch --model gpt-5.4 --out-name gpt54_all_files
 ```
 
 ## Result (Q4 FY24 run)
