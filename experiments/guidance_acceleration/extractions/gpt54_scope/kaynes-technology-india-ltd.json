@@ -1,0 +1,68 @@
+{
+  "call_period": "Q4 FY24",
+  "items": [
+    {
+      "metric": "revenue_growth_pct",
+      "value": "60",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "For the year 2025, we expect to clock a similar rate of growth in revenue greater than 60% and an improvement in operational EBITDA margin of more than 100 basis points."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "15",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "This year we expect it to go up beyond 15%. So this is a kind of a cyclical phenomenon. And on an overall average it will be about 15% operational EBITDA."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "14.5-15",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY29",
+      "passage": "We are planning to grow in the similar way with our percentages where automobile will be around 25% and then rest all the ratios will be maintaining more or less in the same way for which we are focusing on our marketing as well as team building, everything towards the same guidance matter. So that is how we are going to retain the margins at anything between 14.5% to 15% EBITDA."
+    },
+    {
+      "metric": "revenue_absolute",
+      "value": "1",
+      "unit": "billion",
+      "currency": "USD",
+      "scope": "company",
+      "timeline": "FY28",
+      "passage": "My first question is on your medium-term aspiration. If I recall correctly, you had an aspiration of getting to a billion dollar revenue by FY'28, of which 75% is EMS and 25% is other businesses. Does that timeline still hold or because of the current delays, we could see a year or a couple of years of slippages in that?\nWe are very confident that we will be achieving this number in year 2028 because the tailwinds are very good and then entire globe is looking at India."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "15",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY28",
+      "passage": "So at this point in time, we maintain that it will be retained at our current thesis level, which is like we are saying that around 15%-plus EBITDA and 10%-plus PAT."
+    },
+    {
+      "metric": "net_margin_pct",
+      "value": "10",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY28",
+      "passage": "So at this point in time, we maintain that it will be retained at our current thesis level, which is like we are saying that around 15%-plus EBITDA and 10%-plus PAT."
+    },
+    {
+      "metric": "revenue_absolute",
+      "value": "100",
+      "unit": "crores",
+      "currency": "INR",
+      "scope": "segment",
+      "timeline": "FY25",
+      "passage": "So this year you will see at least medical segment will go to triple digits, at least 100 crores plus will be there in the medical sector in FY'525 for sure."
+    }
+  ]
+}

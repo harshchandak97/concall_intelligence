@@ -1,0 +1,52 @@
+{
+  "items": [
+    {
+      "metric": "revenue",
+      "value": "10-15",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "in the coming year",
+      "passage": "We expect our revenue to continue to grow by around 10% to 15% in the coming year."
+    },
+    {
+      "metric": "revenue",
+      "value": "20-25",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "in FY'26",
+      "passage": "However, in FY'26, we should witness a higher growth rate of at least 20% to 25%, as new orders are expected to be received in FY'25, which will start generating revenue in FY'26, post the initial mobilization phase of 6 to 9 months in the current year."
+    },
+    {
+      "metric": "revenue",
+      "value": "20",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "for '26, '27",
+      "passage": "Prashant Kshirsagar: I just wanted to ask you, you mentioned about the growth rate for FY'26 at 20% to 25% of the revenue. Is there any assessment done for '26, '27 by any chance, by the management what the growth rate one should expect? Because your projects, subject to the political situation, which you are expecting more projects to be coming up for execution, the projects are of the -- in the range of 4 to 5 years. So is there any assessment for '26, '27 for the growth rate of revenue?\nKavita Shirvaikar: As per our current estimate, it will be around 20%.\nPrashant Kshirsagar: 20%?\nKavita Shirvaikar: Yes, year-on-year."
+    },
+    {
+      "metric": "ebitda",
+      "value": "14",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "this year",
+      "passage": "Management: We expect to maintain our margins of around 14%, which is there."
+    },
+    {
+      "metric": "ebitda",
+      "value": "14",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "going forward",
+      "passage": "Management: So what we expect is the margins will be maintained, 14% odd, operating EBITDA margins would be maintained.\nKavita Shirvaikar: Yes. We expect to maintain the margin at same level."
+    },
+    {
+      "metric": "pat",
+      "value": "10-15",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "on a full year basis",
+      "passage": "Management: So on a full year basis, we expect 10% to 15% growth in the top line. And bottom line, I mean, around same percentage we should be able to maintain."
+    }
+  ]
+}

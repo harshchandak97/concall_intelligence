@@ -1,0 +1,29 @@
+{
+  "call_period": "Q4 FY24",
+  "items": [
+    {
+      "metric": "revenue_growth_pct",
+      "value": "13-16",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "Mukund Kabra: I can't talk on the EBITDA margin at this point of time, but the top line as you said, between 13% to 16% somewhere around there."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "33",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "Nitish: Our EBITDA margin has increased to 35% in Q4. Is this sustainable and what would be the steady state margin going into FY'25?\nBeni P. Rauka: What we have mentioned is if you really look at a quarter, it's difficult to comment on that. But yes, if you look at on annual numbers from 29% to 33%, this is what we can expect."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "10",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25-FY26",
+      "passage": "Lakshminarayanan K G: A couple of questions. Last year, you have grown US close to 9%, 10%. So what kind of growth you expect for the next couple of years?\nMukund Kabra: We should at least maintain a 10%."
+    }
+  ]
+}

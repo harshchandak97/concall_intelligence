@@ -1,0 +1,61 @@
+{
+  "call_period": "Q4 FY24",
+  "items": [
+    {
+      "metric": "revenue_growth_pct",
+      "value": "60",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "For the year 2025, we expect to clock a similar rate of growth in revenue greater than 60% and an improvement in operational EBITDA margin of more than 100 basis points."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "15",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "And these are what we call the high volume sectors and the gross margins in these sectors are somewhat lower compared to the aerospace vertical, railways vertical, medical, etc., And so this year, we have seen the orders of the financial year FY'25 and we find that the portfolio balance is coming back to our original expectation, which is like 60:40 and may be eventually it will be 50:50, so 50 of high volume and 50 of high profit making the products will be there in our portfolio. So what started at around 15.5%, 16% came down to say 14% last year. This year we expect it to go up beyond 15%. So this is a kind of a cyclical phenomenon. And on an overall average it will be about 15% operational EBITDA."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "60",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "So we have always been working towards making our company self-sufficient as far as funding this 60% growth with CAPEX, which is generated out of our operating cash flows. So I'm happy to tell you that this year we made a small beginning and we've made a small quantum of positive operating cash flows. And in FY'25 we will certainly do EBITDA of more than about 50%, 60%, with 60% growth on the numbers, and something like 100 basis points improvement in the EBITDA."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "14.5-15",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY29",
+      "passage": "We are planning to grow in the similar way with our percentages where automobile will be around 25% and then rest all the ratios will be maintaining more or less in the same way for which we are focusing on our marketing as well as team building, everything towards the same guidance matter. So that is how we are going to retain the margins at anything between 14.5% to 15% EBITDA."
+    },
+    {
+      "metric": "revenue_absolute",
+      "value": "1",
+      "unit": "billion",
+      "currency": "USD",
+      "timeline": "FY28",
+      "passage": "My first question is on your medium-term aspiration. If I recall correctly, you had an aspiration of getting to a billion dollar revenue by FY'28, of which 75% is EMS and 25% is other businesses. Does that timeline still hold or because of the current delays, we could see a year or a couple of years of slippages in that?\nRamesh Kunhikannan: We are very confident that we will be achieving this number in year 2028 because the tailwinds are very good and then entire globe is looking at India."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "15",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY28",
+      "passage": "So when we get to this number, our margins will be materially better than this right, because PCB manufacturing and OSAT is significantly better margin business than EMS globally. So do you think that the margins could trend up even more from the current level?\nJairam P Sampath: So at this point in time, we maintain that it will be retained at our current thesis level, which is like we are saying that around 15%-plus EBITDA and 10%-plus PAT."
+    },
+    {
+      "metric": "net_margin_pct",
+      "value": "10",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY28",
+      "passage": "So when we get to this number, our margins will be materially better than this right, because PCB manufacturing and OSAT is significantly better margin business than EMS globally. So do you think that the margins could trend up even more from the current level?\nJairam P Sampath: So at this point in time, we maintain that it will be retained at our current thesis level, which is like we are saying that around 15%-plus EBITDA and 10%-plus PAT."
+    }
+  ]
+}

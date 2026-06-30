@@ -1,0 +1,49 @@
+# .codex/config.toml — OpenAI Codex project configuration
+#
+# Project-level Codex settings for Concall Intelligence. Codex loads this file
+# automatically for trusted projects. Values are tuned for token economy on a
+# repo with large data artifacts.
+
+# --- Model ---------------------------------------------------------------------
+# Match the project's current extraction candidate (gpt-4o is retired).
+model = "gpt-5.4"
+
+# Reasoning effort: "high" for architecture/decision-layer work, "medium" default.
+# Lower effort = fewer reasoning tokens. Override per-session as needed.
+model_reasoning_effort = "medium"
+
+# --- Approvals & sandbox -------------------------------------------------------
+approval_policy = "on-request"      # ask before running shell / writing files
+sandbox_mode    = "workspace-write" # edits confined to the repo
+
+# --- Token / context management ------------------------------------------------
+[context]
+# Lean root instructions; deep context is pulled on demand from PROJECT_CONTEXT.md.
+project_doc = "PROJECT_CONTEXT.md"
+
+# Exclude large artifacts from automatic context ingestion. These are data dumps,
+# never source — read them via grep/slice, never wholesale. Saves large token spend.
+exclude = [
+  "transcripts/**",
+  "experiments/guidance_acceleration/transcripts/**",
+  "**/*.csv",
+  "**/*.log",
+  "venv/**",
+  "__pycache__/**",
+  "*.docx",
+  "output/**",
+  "experiments/guidance_acceleration/extractions/**",
+  ".git/**",
+]
+
+# Prefer cheap, targeted reads over loading whole trees.
+[context.budget]
+max_file_read_tokens = 8000   # slice larger files instead of full reads
+prefer_grep_over_read = true
+
+# --- Encoding ------------------------------------------------------------------
+# Source is UTF-8; transcripts contain ₹ and other non-ASCII glyphs. Keep UTF-8
+# end-to-end so tokenization of currency/units stays stable.
+[encoding]
+charset = "utf-8"
+normalize_currency_symbols = false  # keep ₹ verbatim — it is matched in extraction

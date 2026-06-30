@@ -1,0 +1,14 @@
+# experiment working data — not committed
+transcripts/
+.cache/
+download_log.csv
+universe_unresolved.csv
+*.log
+
+# extraction working data (steps 3-4)
+extractions/text/
+extractions/cheap/
+extractions/batch/
+
+# keep the frozen cohort (universe_with_concalls.csv) tracked
+# keep extractions/reference/ tracked — small, reproducible gate answer key

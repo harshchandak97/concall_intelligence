@@ -1,0 +1,41 @@
+{
+  "call_period": "Q4 FY24",
+  "items": [
+    {
+      "metric": "revenue_growth_pct",
+      "value": "15",
+      "unit": "%",
+      "currency": null,
+      "scope": "segment",
+      "timeline": "FY25",
+      "passage": "I would like to give guidance for FY '25 EXIM, we are hoping 15% growth."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "25",
+      "unit": "%",
+      "currency": null,
+      "scope": "segment",
+      "timeline": "FY25",
+      "passage": "I would like to give guidance for FY '25 EXIM, we are hoping 15% growth. Domestic, we are hoping 25% growth."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "18-20",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "I would like to give guidance for FY '25 EXIM, we are hoping 15% growth. Domestic, we are hoping 25% growth. That makes overall 18% to 20% growth in FY '25."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "25",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "And our margins, EBITDA, which is in the range of 25%, we are very confident that we will be able to maintain the 25% EBITDA in this financial year also."
+    }
+  ]
+}

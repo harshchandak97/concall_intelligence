@@ -1,0 +1,68 @@
+{
+  "call_period": "Q4 FY24",
+  "items": [
+    {
+      "metric": "revenue_growth_pct",
+      "value": "10-15",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "We expect our revenue to continue to grow by around 10% to 15% in the coming year."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "20-25",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY26",
+      "passage": "However, in FY'26, we should witness a higher growth rate of at least 20% to 25%, as new orders are expected to be received in FY'25, which will start generating revenue in FY'26, post the initial mobilization phase of 6 to 9 months in the current year."
+    },
+    {
+      "metric": "revenue_absolute",
+      "value": "25000",
+      "unit": "crores",
+      "currency": "INR",
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "See, what we are looking at is our order book to reach around INR25,000 crores by end of FY'25, so post execution of this year."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "14",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "We expect to maintain our margins of around 14%, which is there."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "20",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY27",
+      "passage": "As per our current estimate, it will be around 20%."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "10-15",
+      "unit": "%",
+      "currency": null,
+      "scope": "segment",
+      "timeline": "FY25",
+      "passage": "Payal Lad: Okay. So like do you anticipate your overall tunnelling order book percentage to increase from year on? Or would it continue to remain in the range of 10% to 11%?\nManagement: So it may be there in the range of 10% to 15%."
+    },
+    {
+      "metric": "pat_growth_pct",
+      "value": "10-15",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "Jay Shah: Okay, INR4,000 crores. So what is the company's projected top line and bottom line growth for the upcoming quarters then?\nManagement: So on a full year basis, we expect 10% to 15% growth in the top line. And bottom line, I mean, around same percentage we should be able to maintain."
+    }
+  ]
+}

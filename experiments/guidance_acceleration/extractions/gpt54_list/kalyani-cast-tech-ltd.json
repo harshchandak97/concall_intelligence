@@ -1,0 +1,44 @@
+{
+  "items": [
+    {
+      "metric": "pat",
+      "value": "10-13",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "during this year",
+      "passage": "Basically, let me tell you, PBT and all, I will not be able to comment, but I will be able to comment on PAT. PAT will be between 10% to 13%, anywhere 13%. Yes. Basically, you see, this time, we are expecting to grow by 40% to 50% during this year. And our PAT will be around 10% to 13% of that."
+    },
+    {
+      "metric": "revenue",
+      "value": "40-50",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "during this year",
+      "passage": "Basically, let me tell you, PBT and all, I will not be able to comment, but I will be able to comment on PAT. PAT will be between 10% to 13%, anywhere 13%. Yes. Basically, you see, this time, we are expecting to grow by 40% to 50% during this year. And our PAT will be around 10% to 13% of that."
+    },
+    {
+      "metric": "revenue",
+      "value": "140-145",
+      "unit": "crore",
+      "currency": "INR",
+      "timeframe": "this time",
+      "passage": "So we told that INR80 crores we have already got, we will be around INR140 crores to INR145 crores to INR150 crores this time."
+    },
+    {
+      "metric": "revenue",
+      "value": "50",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "this year",
+      "passage": "Paramjeet Singh: Okay. And sir, you said you will be growing 50% this year. Do you foresee the same kind of growth rate for next three years, five years? What is your hunch?\nNaresh Kumar: Yes, it should be."
+    },
+    {
+      "metric": "revenue",
+      "value": "30-35",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "for another 4-5 years",
+      "passage": "This year, I am very confident that we will be going by 40%-50%. And the next year, maybe this kind of growth, maybe 30%, 35% growth will continue for another 4-5 years."
+    }
+  ]
+}

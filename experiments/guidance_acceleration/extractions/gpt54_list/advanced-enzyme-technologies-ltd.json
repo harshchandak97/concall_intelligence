@@ -1,0 +1,36 @@
+{
+  "items": [
+    {
+      "metric": "revenue",
+      "value": "13-16",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "FY'25",
+      "passage": "Mukund Kabra: I can't talk on the EBITDA margin at this point of time, but the top line as you said, between 13% to 16% somewhere around there."
+    },
+    {
+      "metric": "ebitda",
+      "value": "33",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "going ahead",
+      "passage": "Nitish: You mentioned EBITDA margin would be in the 33% range, right, annual level going ahead also?\nBeni P. Rauka: So right now, that's what we are saying, because this is what it is as of now. But of course, going forward, we see improvement."
+    },
+    {
+      "metric": "revenue",
+      "value": "10",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "for the next couple of years",
+      "passage": "Lakshminarayanan K G: A couple of questions. Last year, you have grown US close to 9%, 10%. So what kind of growth you expect for the next couple of years?\nMukund Kabra: We should at least maintain a 10%."
+    },
+    {
+      "metric": "revenue",
+      "value": "1000",
+      "unit": "crore",
+      "currency": "INR",
+      "timeframe": "by '28-29",
+      "passage": "Rohit Ohri: Do you think that you'll be a ₹1,000 crores top line company by '28-29 with approximately gross margins of some 77%, 78% kind of a range?\nMukund Kabra: Here that target is always there. We need to grow about 14% to 16% to reach to that target. We are like trying our own. That's our math. Let's see how the thing progresses."
+    }
+  ]
+}

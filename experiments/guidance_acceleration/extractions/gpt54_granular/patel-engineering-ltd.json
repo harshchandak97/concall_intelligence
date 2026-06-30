@@ -1,0 +1,37 @@
+{
+  "call_period": "Q4 FY24",
+  "items": [
+    {
+      "metric": "revenue_growth_pct",
+      "value": "10-15",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "We expect our revenue to continue to grow by around 10% to 15% in the coming year."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "20-25",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY26",
+      "passage": "However, in FY'26, we should witness a higher growth rate of at least 20% to 25%, as new orders are expected to be received in FY'25, which will start generating revenue in FY'26, post the initial mobilization phase of 6 to 9 months in the current year."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "14",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "We expect to maintain our margins of around 14%, which is there."
+    },
+    {
+      "metric": "pat_growth_pct",
+      "value": "10-15",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "So on a full year basis, we expect 10% to 15% growth in the top line. And bottom line, I mean, around same percentage we should be able to maintain."
+    }
+  ]
+}

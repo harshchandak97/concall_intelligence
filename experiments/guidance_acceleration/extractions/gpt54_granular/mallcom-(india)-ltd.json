@@ -1,0 +1,29 @@
+{
+  "call_period": "Q4 FY24",
+  "items": [
+    {
+      "metric": "revenue_growth_pct",
+      "value": "15",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "So, in terms of growth, we are expecting something like a 15% growth from here for the next year."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "14",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY28",
+      "passage": "Okay. And what can we be the margins when we reach say 800, 1000 crore by FY28?\nShyam Agrawal: Margins would be in the range only. So, whatever we see the product profile is not changing much but yes with the better technology and some upgrades as per market development, but product more or less remain same. So, margins would be in that range only, whatever we are doing little bit variation, but not much expected.\nAgum Shah: So, can it increase more than 15% or remain in that range?\nShyam Agrawal: See definitely we will try but as of now it is in the range of 14% so, it may be 50 basis point up that is possible."
+    },
+    {
+      "metric": "revenue_absolute",
+      "value": "1000",
+      "unit": "crore",
+      "currency": "INR",
+      "timeline": "FY28",
+      "passage": "So, we have already stated our target till FY28 we target Rs.1000 crore and for that we needed to prepare this infra ready and to whatever demand comes in future and so, we can meet that demand and we should have infra ready."
+    }
+  ]
+}

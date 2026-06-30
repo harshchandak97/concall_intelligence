@@ -1,0 +1,45 @@
+{
+  "call_period": "Q4 FY24",
+  "items": [
+    {
+      "metric": "net_margin_pct",
+      "value": "10-13",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "Basically, let me tell you, PBT and all, I will not be able to comment, but I will be able to comment on PAT. PAT willb e between 10% to 13%, anywhere 13%. Yes. Basically, you sce, his time, we are expecting to grow by 40% to 50% during this year. And our PAT will be around 10% to 13% of that."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "40-50",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY25",
+      "passage": "Basically, let me tell you, PBT and all, I will not be able to comment, but I will be able to comment on PAT. PAT willb e between 10% to 13%, anywhere 13%. Yes. Basically, you sce, his time, we are expecting to grow by 40% to 50% during this year. And our PAT will be around 10% to 13% of that."
+    },
+    {
+      "metric": "revenue_absolute",
+      "value": "140-150",
+      "unit": "crores",
+      "currency": "INR",
+      "timeline": "FY25",
+      "passage": "So we told that INR8O crores we have already got, we will be around INR140 crores to INR145 crores to INR150 crores this time."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "50",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY26-FY30",
+      "passage": "Paramjeet Singh: Okay. And sir, you said you will be growing 50% this year. Do you foresce the same kind of growth rate for next three years, five years? What is your hunch?\nYes, it should be."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "30-35",
+      "unit": "%",
+      "currency": null,
+      "timeline": "FY26-FY30",
+      "passage": "This year, I am very confident that we will be going by 40%-50%. And the next year, maybe this kind of growth, maybe 30%, 35% growth will continue for another 4-5 years."
+    }
+  ]
+}

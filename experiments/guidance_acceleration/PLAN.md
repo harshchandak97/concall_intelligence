@@ -83,6 +83,27 @@ The LLM does **only the reading**, never arithmetic. We collapse the full pipeli
 
 ---
 
+## 5a. Validate the cheap extraction before scaling (GATE)
+
+Before running the cheap model on the whole universe, confirm it extracts the headline target accurately. **No human ground truth** — use a stronger model as the reference (consistent with the LLM-only, cross-family GT approach in CLAUDE.md).
+
+**Method:**
+1. Pick ~20–25 companies from the cohort.
+2. Run BOTH the cheap model and a **cross-family stronger model** on them, same prompt. If the cheap model is GPT-5.4-mini, the reference MUST be **Opus 4.8 (Anthropic)** — *not* GPT-5.5 — so their errors are independent, not correlated.
+3. Compare on the **decision-relevant axes**, not raw strings:
+   - **Has-target agreement** — do both agree which companies gave a quantified forward target vs `none`?
+   - **Derived-number agreement** — after the Python conversion, is `forward_growth` within a few pp between the two?
+   - **Top-N overlap** — compute ACCELERATION from each; do the **top ~3–5 names match**? This is the metric that matters — only the top of the ranking feeds the experiment.
+4. **Adjudicate only the disagreements** (likely 3–5 cases). *You* read just those transcripts to see who's right. This ~20-min step is what turns "the two models agree" (consistency) into an actual correctness check, and reveals the *direction* of error: is cheap **missing** targets (drops companies from the top) or **over-reading** (pollutes the top)?
+
+**Pass bar (set now):** top-3 overlap ≥ 2/3, has-target agreement ≥ ~85%, no gross derived-number errors (e.g. "3×" read as 30%, wrong FY).
+- **Pass → scale the cheap model to the full universe.**
+- **Fail → fix the prompt or upgrade the cheap model** (mini → GPT-5.4 / Sonnet 4.6; cost gap is trivial at batch), then re-run the gate.
+
+**Why this is enough:** agreement proves "cheap ≈ strong," not "strong = truth" — acceptable here because the task is objective fact-extraction and the disagreement-adjudication adds a real correctness signal. The **context window is not a concern**: a ~14k-token (20-page) transcript fills ~3.5% of GPT-5.4-mini's 400K window and ~7% of Haiku 4.5's 200K — single pass, no chunking. This gate tests *extraction quality*, which is the real risk.
+
+---
+
 ## 6. Data needed
 
 | Item | Source | Notes |
@@ -98,11 +119,12 @@ The LLM does **only the reading**, never arithmetic. We collapse the full pipeli
 
 1. **Build the universe**: list sub-₹15,000cr companies with a Q4 FY24 concall + the call date.
 2. **Download** all those transcripts.
-3. **Cheap-extract** the 4 fields from each (one batch LLM job).
-4. **Compute `forward_growth`** (Python) and pull **`trailing_growth`** (Screener) → **`ACCELERATION`** per company.
-5. **FREEZE the ranked list to `frozen_ranks.csv`. Commit it. Do NOT look at prices yet.** ← anti-fitting checkpoint.
-6. **Pull prices** and compute, for every company, market-adjusted return = stock return − Nifty Smallcap 250 return, over **+21 trading days, +252, +504**, measured from the close **after** the call date (no look-ahead).
-7. **Analyse** (Section 8).
+3. **Validate the cheap extractor (GATE)** on ~20–25 companies: cheap vs cross-family strong model, adjudicate disagreements, must pass before scaling (Section 5a).
+4. **Cheap-extract** the 4 fields from the full universe (one batch LLM job).
+5. **Compute `forward_growth`** (Python) and pull **`trailing_growth`** (Screener) → **`ACCELERATION`** per company.
+6. **FREEZE the ranked list to `frozen_ranks.csv`. Commit it. Do NOT look at prices yet.** ← anti-fitting checkpoint.
+7. **Pull prices** and compute, for every company, market-adjusted return = stock return − Nifty Smallcap 250 return, over **+21 trading days, +252, +504**, measured from the close **after** the call date (no look-ahead).
+8. **Analyse** (Section 8).
 
 ---
 
@@ -141,11 +163,12 @@ experiments/guidance_acceleration/
 ├── PLAN.md                ← this file
 ├── universe.csv           ← cohort: company, ticker, concall date  (step 1)
 ├── transcripts/           ← downloaded PDFs                          (step 2)
-├── extract_cheap.py       ← 4-field LLM extraction (batch)           (step 3)
-├── score.py               ← forward_growth + trailing → ACCELERATION (step 4)
-├── frozen_ranks.csv       ← committed ranked list, prices NOT seen   (step 5)
-├── returns.py             ← price pull + market-adjusted returns     (step 6)
-├── analyze.py             ← top-5% vs median, hit rate, case studies (step 7-8)
+├── validate_extraction.py ← cheap vs strong cross-family gate         (step 3)
+├── extract_cheap.py       ← 4-field LLM extraction (batch)           (step 4)
+├── score.py               ← forward_growth + trailing → ACCELERATION (step 5)
+├── frozen_ranks.csv       ← committed ranked list, prices NOT seen   (step 6)
+├── returns.py             ← price pull + market-adjusted returns     (step 7)
+├── analyze.py             ← top-5% vs median, hit rate, case studies (step 8)
 └── results/               ← output tables / the verdict
 ```
 

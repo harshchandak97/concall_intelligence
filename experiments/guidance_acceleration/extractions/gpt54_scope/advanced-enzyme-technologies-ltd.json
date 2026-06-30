@@ -1,0 +1,41 @@
+{
+  "call_period": "Q4 FY24",
+  "items": [
+    {
+      "metric": "revenue_growth_pct",
+      "value": "13-16",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "Mukund Kabra: I can't talk on the EBITDA margin at this point of time, but the top line as you said, between 13% to 16% somewhere around there."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "33",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "Nitish: Our EBITDA margin has increased to 35% in Q4. Is this sustainable and what would be the steady state margin going into FY'25?\nBeni P. Rauka: What we have mentioned is if you really look at a quarter, it's difficult to comment on that. But yes, if you look at on annual numbers from 29% to 33%, this is what we can expect."
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "10",
+      "unit": "%",
+      "currency": null,
+      "scope": "geography",
+      "timeline": "FY25-FY26",
+      "passage": "Lakshminarayanan K G: A couple of questions. Last year, you have grown US close to 9%, 10%. So what kind of growth you expect for the next couple of years?\nMukund Kabra: We should at least maintain a 10%."
+    },
+    {
+      "metric": "revenue_absolute",
+      "value": "1000",
+      "unit": "crores",
+      "currency": "INR",
+      "scope": "company",
+      "timeline": "FY29",
+      "passage": "Rohit Ohri: Do you think that you'll be a ₹1,000 crores top line company by '28-29 with approximately gross margins of some 77%, 78% kind of a range?\nMukund Kabra: Here that target is always there. We need to grow about 14% to 16% to reach to that target. We are like trying our own. That's our math. Let's see how the thing progresses."
+    }
+  ]
+}

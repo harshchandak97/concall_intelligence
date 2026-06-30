@@ -1,0 +1,44 @@
+{
+  "items": [
+    {
+      "metric": "revenue",
+      "value": "60",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "For the year 2025",
+      "passage": "For the year 2025, we expect to clock a similar rate of growth in revenue greater than 60% and an improvement in operational EBITDA margin of more than 100 basis points."
+    },
+    {
+      "metric": "ebitda",
+      "value": "100",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "in FY'25",
+      "passage": "Just a clarification on guidance. Have I heard correctly like sales growth of 60% for FY'25 and a margin improvement of 100 basis points?\nYes, that's our plan."
+    },
+    {
+      "metric": "revenue",
+      "value": "1",
+      "unit": "billion",
+      "currency": "USD",
+      "timeframe": "by FY'28",
+      "passage": "My first question is on your medium-term aspiration. If I recall correctly, you had an aspiration of getting to a billion dollar revenue by FY'28, of which 75% is EMS and 25% is other businesses. Does that timeline still hold or because of the current delays, we could see a year or a couple of years of slippages in that?\nWe are very confident that we will be achieving this number in year 2028 because the tailwinds are very good and then entire globe is looking at India."
+    },
+    {
+      "metric": "ebitda",
+      "value": "15",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "around 15%-plus",
+      "passage": "So at this point in time, we maintain that it will be retained at our current thesis level, which is like we are saying that around 15%-plus EBITDA and 10%-plus PAT."
+    },
+    {
+      "metric": "pat",
+      "value": "10",
+      "unit": "%",
+      "currency": null,
+      "timeframe": "at this point in time",
+      "passage": "So at this point in time, we maintain that it will be retained at our current thesis level, which is like we are saying that around 15%-plus EBITDA and 10%-plus PAT."
+    }
+  ]
+}

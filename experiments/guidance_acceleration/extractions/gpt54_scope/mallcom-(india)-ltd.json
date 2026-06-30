@@ -1,0 +1,41 @@
+{
+  "call_period": "Q4 FY24",
+  "items": [
+    {
+      "metric": "revenue_growth_pct",
+      "value": "15",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "So, in terms of growth, we are expecting something like a 15% growth from here for the next year."
+    },
+    {
+      "metric": "ebitda_margin_pct",
+      "value": "14",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY25",
+      "passage": "And, the margin profile we are expecting to have something similar as compared to this year, because a lot of the products which are going to be launched new are going to come only in the later half of the year."
+    },
+    {
+      "metric": "revenue_absolute",
+      "value": "1000",
+      "unit": "crore",
+      "currency": "INR",
+      "scope": "company",
+      "timeline": "FY28",
+      "passage": "So, we have already stated our target till FY28 we target Rs.1000 crore"
+    },
+    {
+      "metric": "revenue_growth_pct",
+      "value": "20-25",
+      "unit": "%",
+      "currency": null,
+      "scope": "company",
+      "timeline": "FY27",
+      "passage": "So sir I just wanted to understand in terms of, like you rightly said, brand and India business are kind of synonymous and non-branded, and export are also synonymous. So, our growth of say 20%, 25%, over next three years, or maybe that will take four year doesn't matter whether you are 1000 crore at 28, or 29."
+    }
+  ]
+}
